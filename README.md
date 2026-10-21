@@ -42,3 +42,6 @@ python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out c
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools
 added for it (`optimize_robust_aligned.py`, `refine_minimax.py`, as-built tolerance analysis), the ring-holder CAD generator (`make_ring_cad.py`,
 `make_test_coupon.py`, `make_fdm_coupon.py`, `make_coupons_step.py`, `check_bolt_loads.py`), and what was learned.
+
+See [OSII_COMPARISON.md](OSII_COMPARISON.md) for a comparison with the OSI² 30 cm "ROMA" magnet and a study of
+magnet-magnet interaction (finite permeability) in our design.
