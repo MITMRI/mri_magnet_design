@@ -47,6 +47,17 @@ python field_design.py results/field_design/FD_gd.xlsx
 python plot_magnets_3d.py views.png results/field_design/FD_gd.xlsx:"Field-driven"
 ```
 
+## Passive shimming
+
+See [SHIMMING.md](SHIMMING.md): a printed sleeve of shim trays slides into the bore after the magnet is built (no
+disassembly); `shim_design.py` places 1/8" cubes from a measured field map with the same LP + gradient pipeline,
+`make_shim_cad.py` generates the sleeve, trays and loading guide.
+
+```bash
+python shim_design.py results/field_design/FD_robust.xlsx results/shim/round1 --map map.csv
+python make_shim_cad.py results/shim/round1_map.csv --holder cad/fd_robust --out cad/shim_round1
+```
+
 ## Compact magnet design study (this fork)
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools

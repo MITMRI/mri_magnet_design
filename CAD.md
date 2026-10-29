@@ -44,6 +44,23 @@ Side view of the stack (z is the bore axis; B0 points along +x, marked by a V no
 All parts share 8 M3 bolt holes outside the magnets and 6 M2 holes near the bore. One M3 hole is shifted 10 degrees off
 the even spacing, so parts only stack in the correct rotation and the right way up.
 
+### Field-driven robust design and shim sleeve
+
+The current design is `results/field_design/FD_robust.xlsx` (FIELD_DESIGN.md): 650 cubes in 14 slabs and 2 FDM
+spacers (8.16 mm, printed twice), OD 185.9 mm, stack z -74.56 to +71.56 mm, 8 M3 rods at r 89.8 and 6 M2 rods at r 52.
+Pocket-to-pocket walls go down to 1.14 mm (same range as the previous design; the SLA coupon's thin-wall pairs test it).
+
+```bash
+python make_ring_cad.py results/field_design/FD_robust.xlsx --out cad/fd_robust --magnets
+python make_shim_cad.py results/shim/FD_robust_sim_b0.csv --holder cad/fd_robust --out cad/fd_robust_shim
+```
+
+The second command makes the passive shim sleeve and trays for one shim solution ([SHIMMING.md](SHIMMING.md)). The
+sleeve slides into the bore and its flange sits on the top end cap, so **design the end caps with a 100 mm bore, a flat
+outer face on the top cap, and M2 nuts no taller than 3 mm** (they sit inside 7 mm holes in the flange). `holes.csv`
+in the holder folder lists every bolt hole for that purpose. `shim_assembly.step` uses the same coordinates as
+`assembly.step`.
+
 ## Setup
 
 Python 3.12 and the project requirements (CadQuery is included):
@@ -190,6 +207,7 @@ section).
 | `assembly.step` | Everything in place: `magnet_holder` > `sla_rings` (9 slabs, light grey) + `fdm_spacers` (3 spacer parts, each placed twice, blue) |
 | `assembly_with_magnets.step` | Same plus `magnets`: one `magnet_6.35mm` part (red) placed 649 times (only with `--magnets`) |
 | `slabs.csv` | Per slab: z range, thickness, magnet count, floor, thinnest walls, volume |
+| `holes.csv` | Every bolt hole through the stack (outer M3, inner M2): position, radius, angle, bolt and hole diameter |
 | `spacers.csv` | Per spacer position: which slabs it goes between, part file, z range, nominal and CAD height |
 
 `cad/coupon/tolerance_coupon.{stl,step,png}` and `cad/fdm_coupon/fdm_coupon.{stl,step}` are the coupons.

@@ -1,0 +1,18 @@
+shim sleeve: 36 trays, cube centres at r 47.91 mm, 3.175 mm cubes (Br 1320 mT, 0.0336 A m2), |z| <= 70, max 60 cubes, B0 >= 44.8 mT
+3 simulated builds of results/field_design/FD_robust.xlsx (Br 0.8%, 0.7 deg, +-0.25 mm), 1990 check points on the 40 x 40 mm cylinder
+b0: unshimmed 2149 ppm, B0 44.97 mT
+    start 0.50: 59 cubes, 460 ppm, B0 44.84 mT
+    start 0.38: 60 cubes, 444 ppm, B0 44.88 mT
+    start 0.25: 60 cubes, 12040 ppm, B0 45.02 mT
+b0: 2149 -> 444 ppm with 60 cubes (34 flat, 11 out, 15 in) in 14 trays; LP bound 72 ppm; B0 44.88 mT; with shim-cube errors 642 typical / 775 p90  (76 s)
+b1: unshimmed 3461 ppm, B0 45.02 mT
+    start 0.50: 56 cubes, 9165 ppm, B0 45.05 mT
+    start 0.38: 60 cubes, 459 ppm, B0 44.97 mT
+    start 0.25: 60 cubes, 506 ppm, B0 44.88 mT
+b1: 3461 -> 459 ppm with 60 cubes (42 flat, 8 out, 10 in) in 14 trays; LP bound 73 ppm; B0 44.97 mT; with shim-cube errors 641 typical / 759 p90  (135 s)
+b2: unshimmed 2246 ppm, B0 45.01 mT
+    start 0.50: 59 cubes, 684 ppm, B0 44.87 mT
+    start 0.38: 59 cubes, 777 ppm, B0 44.96 mT
+    start 0.25: 60 cubes, 632 ppm, B0 44.91 mT
+b2: 2246 -> 632 ppm with 60 cubes (35 flat, 11 out, 14 in) in 16 trays; LP bound 72 ppm; B0 44.91 mT; with shim-cube errors 764 typical / 867 p90  (97 s)
+-> results/shim/FD_robust_sim_*.csv

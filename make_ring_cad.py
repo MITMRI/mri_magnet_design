@@ -33,6 +33,7 @@ Outputs in --out:
   assembly_with_magnets.step  the same plus magnets: one cube part instanced 649 times (with --magnets)
   slab_<i>_z<z>.png         top-view loading guide: pockets, N notches and magnet counts per slab
   slabs.csv                 z range, thickness, magnet count and minimum walls per slab
+  holes.csv                 bolt holes through the stack (outer and inner): position, bolt and hole diameter
 
 Ledger format as in the MRI4ALL scripts (X-pos, Y-pos, Z-pos, X-rot, Y-rot, Z-rot, Magnet_length; mm and degrees,
 extrinsic rotations, magnetization along the cube's local x as in magsimulator.build_magnet_collection).
@@ -469,6 +470,9 @@ def main():
             export(True, 'assembly_with_magnets.step')
 
     pd.DataFrame(rows).to_csv(os.path.join(args.out, 'slabs.csv'), index=False)
+    pd.DataFrame([dict(kind='outer' if n < args.outer_holes else 'inner', x=x, y=y, r=np.hypot(x, y),
+                       angle=np.degrees(np.arctan2(y, x)), bolt=args.outer_bolt if n < args.outer_holes else args.inner_bolt,
+                       hole_d=hd) for n, (x, y, hd) in enumerate(holes)]).to_csv(os.path.join(args.out, 'holes.csv'), index=False)
     print(f'stack {bottoms[0]:+.2f} to {tops[-1]:+.2f} mm ({tops[-1] - bottoms[0]:.1f} mm long, without end caps); '
           f'SLA {sum(r["volume_cm3"] for r in rows):.0f} cm3' + (f', FDM spacers {sum(r["volume_cm3"] for r in sp_rows):.0f} cm3' if sp_rows else ''))
     for w in warnings:
