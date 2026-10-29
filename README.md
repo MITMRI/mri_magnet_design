@@ -37,6 +37,16 @@ tolerance coupons to print first, and assembly:
 python make_ring_cad.py results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx --out cad/best --magnets
 ```
 
+## Field-driven design (current method)
+
+See [FIELD_DESIGN.md](FIELD_DESIGN.md): `field_design.py` designs the ring layout from a target field, CoilGen style
+(sensitivity matrix -> LP ideal magnet distribution -> MILP ring placement -> gradient refinement), in about 3 minutes:
+
+```bash
+python field_design.py results/field_design/FD_gd.xlsx
+python plot_magnets_3d.py views.png results/field_design/FD_gd.xlsx:"Field-driven"
+```
+
 ## Compact magnet design study (this fork)
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools

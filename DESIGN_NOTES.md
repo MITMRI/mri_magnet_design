@@ -3,7 +3,11 @@
 This fork adds tools to the MRI4ALL magnet scripts for a smaller magnet built from 1/4" N42 cubes in resin-printed rings,
 and records the design study that produced the recommended layout. All numbers are simulated with magpylib 4.
 
-## Recommended design
+> **Design method going forward:** `field_design.py` (target field -> LP/MILP ring placement -> gradient refinement)
+> reaches 45 ppm with 650 magnets in ~3 minutes, versus 430 ppm for the design below. See [FIELD_DESIGN.md](FIELD_DESIGN.md).
+> The sections below record the earlier GA-based study and the design the existing CAD was generated for.
+
+## Recommended design (GA-based study)
 
 `results/BEST_bore100_cyl40x40_649mag_427ppm.xlsx` (ledger format; readable by `magcadexporter.py` and `check_demag.py`)
 
@@ -204,29 +208,3 @@ The GA step is stochastic; a different seed gives a different starting design.
    positions and rotations. This is the main route below ~3,000 ppm as built.
 2. Print a test ring and a pocket-clearance coupon; confirm the 184 mm ring fits upright in PreForm with supports.
 3. Plan passive or electrical shimming for the remaining error.
-
-## Field-driven design (`field_design.py`)
-
-A CoilGen-style alternative to the GA: target field (Bx = B0 on the 40 x 40 mm cylinder surface) -> sensitivity
-matrix of every candidate ring (layer radius x z on a 1 mm grid) -> LP for the ideal continuous magnet density ->
-MILP for whole ring slices with integer magnet counts (the initial design) -> gradient refinement of slice z, ring
-radius and rotation (Adam, then SLSQP minimax, analytic dipole gradients with an exact-cuboid correction) plus screened
-+-1 magnet moves. `--ga` refines the same initial design with a pymoo GA instead, for comparison. Same constraints as
-`refine_minimax.py` (<= 650 magnets, B0 >= 45 mT, <= 150 mm, 100 mm bore, OD <= 200 mm, 9.35 mm slices, 3 layers).
-
-```bash
-python field_design.py results/field_design/FD_gd.xlsx                 # ~3 min (MILP 2 min, gradients <1 min)
-python field_design.py out.xlsx --start <initial.xlsx> --ga --pool 11   # GA refinement for comparison
-```
-
-| Design | Magnets | B0 (mT) | ppm, ideal (20k pts) | As built p90 (ppm) | Run time |
-|---|---|---|---|---|---|
-| Previous BEST (GA + Powell + minimax) | 649 | 45.00 | 430 | 4,423 | hours |
-| GA from scratch (`optimize_robust_aligned.py`, paper objective) | 634 | 47.58 | 3,669 | 6,886 | 10 min |
-| LP + MILP initial placement | 648 | 45.10 | 64 | 4,716 | 2 min |
-| MILP + GA refinement | 648 | 45.02 | 189 | 4,619 | 19 min |
-| **MILP + gradient refinement** (`results/field_design/FD_gd.xlsx`) | 650 | 45.00 | **45** | 4,644 | **3 min** |
-
-As built uses 1% Br, 0.05 mm, 1 degree, 400 builds, no shimming. The field-driven design is ~10x better on paper but
-not better as built: below ~1,000 ppm magnet errors dominate (see above). Its smallest rings (13 and 16 magnets) are
-valid only because the check points are dense enough to see their azimuthal ripple; always validate on >= 2,000 points.
