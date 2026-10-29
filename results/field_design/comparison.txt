@@ -1,0 +1,6 @@
+design                           magnets  B0 mT ppm (20k pts) as-built p90 len mm  OD mm
+OG BEST (GA+Powell+minimax)          649  45.00           430         4423  143.9  184.2
+GA from scratch, 10 min              634  47.58          3669         6886  121.8  173.9
+LP+MILP initial placement            648  45.10            64         4716  149.7  173.9
+MILP + GA refinement                 648  45.02           189         4619  149.7  174.4
+MILP + gradient refinement           650  45.00            45         4644  148.0  173.9

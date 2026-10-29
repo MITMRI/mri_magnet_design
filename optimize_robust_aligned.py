@@ -61,6 +61,7 @@ warnings.filterwarnings("ignore")
 
 # usage: python optimize_robust_aligned.py <DSV diameter mm> <generations> [max magnets] [min B0 mT] [second objective: magnets | b0] [max length mm] [magnet bore diameter mm] [cylinder length mm, 0 = sphere: target a cylinder of the DSV diameter instead of a sphere] [max layers] [objective: asbuilt | paper] [random seed] [max B0 mT]
 # env: POOL (worker processes), POP (population size), NSENS (check points on the target region), TAG (extra file name tag),
+#      TIME_LIMIT (wall-clock limit as HH:MM:SS, replaces the generation count),
 #      ALIGN (1: all layers share ring z positions, 0: each layer independent), LAYER_WALL (mm of resin between layers; default
 #      uses the original sqrt(3)*cube + 3 mm spacing, otherwise sqrt(2)*cube + LAYER_WALL, the in-plane diagonal of a cube rotated about z)
 # objectives: as-built homogeneity (90th percentile over random magnet errors, no shimming) and number of magnets
@@ -342,7 +343,7 @@ if __name__ == '__main__':
 
     res = minimize(problem,
                    algorithm,
-                   ('n_gen', N_GEN),
+                   get_termination('time', os.environ['TIME_LIMIT']) if 'TIME_LIMIT' in os.environ else ('n_gen', N_GEN),
                    seed=SEED,
                    callback=SaveProgress(),
                    verbose=True)

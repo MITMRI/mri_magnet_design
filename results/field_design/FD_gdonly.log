@@ -1,0 +1,14 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 9.35 mm, z <= 71.83 mm
+[   0.3 s] start results/field_design/FD_gd_initial.xlsx: 648 magnets, inf ppm
+[   6.5 s] gradient descent (Adam): 78 ppm
+[   7.4 s] minimax (SLSQP): 38 ppm
+[  40.6 s]   ring 11: +1 -> 650 magnets, 37 ppm
+[  95.3 s] magnet count moves: 37 ppm
+[  95.4 s] done: 650 magnets, 37 ppm on the optimization points, B0 45.00 mT -> results/field_design/FD_gdonly.xlsx
+z=  7.89: 26@r57.5, 26@r68.5
+z= 18.92: 13@r59.0
+z= 29.29: 32@r57.5, 32@r68.5
+z= 52.11: 24@r58.2, 16@r69.2
+z= 61.46: 32@r57.5, 39@r68.5
+z= 70.81: 30@r57.5, 37@r68.5, 18@r79.5
+stage times: adam 6 s, slsqp 1 s, moves 88 s

@@ -1,0 +1,11 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 9.35 mm, z <= 71.83 mm
+[   0.2 s] start results/field_design/FD_gd_initial.xlsx: 648 magnets, inf ppm
+[1153.6 s] GA: 176 ppm after 597 generations, 35760 evaluations
+[1153.8 s] done: 648 magnets, 176 ppm on the optimization points, B0 45.02 mT -> results/field_design/FD_ga.xlsx
+z=  7.77: 26@r57.5, 26@r68.6
+z= 18.57: 13@r57.5
+z= 29.50: 32@r57.5, 31@r68.7
+z= 51.62: 25@r57.5, 16@r68.8
+z= 61.74: 32@r57.5, 39@r68.7
+z= 71.67: 31@r57.5, 37@r68.5, 16@r79.7
+stage times: ga 1153 s
