@@ -1,0 +1,37 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 9.35 mm, z <= 71.83 mm
+[   2.7 s] continuous source (LP): 2234.7 ppm at 45.1 mT with 650 magnets (per layer [344, 186, 120])
+[  61.9 s] discrete placement (MILP, Optimization terminated successfully. (HiGHS Status 7: Optimal)): 1218 ppm linearized, exact 1577 ppm, B0 45.10 mT, 649 magnets, 7 slices
+z=  0.00: 29@r57.5
+z= 11.68: 31@r57.5
+z= 21.68: 15@r57.5
+z= 31.68: 32@r57.5, 24@r68.5
+z= 51.67: 10@r57.5, 36@r68.5
+z= 61.67: 32@r57.5, 37@r68.5, 8@r79.5
+z= 71.67: 32@r57.5, 39@r68.5, 14@r79.5
+[  68.2 s] gradient descent (Adam): 1577 ppm
+[  69.9 s] minimax (SLSQP): 1102 ppm
+[  92.5 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1100 ppm
+[ 114.1 s]   ring 9: -1, ring 8: +1 -> 649 magnets, 1083 ppm
+[ 134.7 s]   ring 9: -1, ring 8: +1 -> 649 magnets, 1065 ppm
+[ 156.1 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1062 ppm
+[ 178.2 s]   ring 9: -1, ring 6: +1 -> 649 magnets, 1043 ppm
+[ 198.2 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1040 ppm
+[ 218.4 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1035 ppm
+[ 239.0 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1032 ppm
+[ 259.1 s]   ring 12: -1, ring 9: +1 -> 649 magnets, 1030 ppm
+[ 280.9 s]   ring 9: -1, ring 6: +1 -> 649 magnets, 1016 ppm
+[ 303.4 s]   ring 9: -1, ring 6: +1 -> 649 magnets, 1004 ppm
+[ 324.4 s]   ring 12: -1, ring 4: +1 -> 649 magnets, 964 ppm
+[ 346.6 s]   ring 12: -1, ring 4: +1 -> 649 magnets, 893 ppm
+[ 369.1 s]   ring 9: -1, ring 4: +1 -> 649 magnets, 859 ppm
+[ 390.8 s]   ring 9: -1, ring 4: +1 -> 649 magnets, 834 ppm
+[ 410.8 s] magnet count moves: 834 ppm
+[ 411.0 s] done: 649 magnets, 834 ppm on the optimization points, B0 45.00 mT -> results/field_design/region_sweep/FD_cyl60x60.xlsx
+z=  0.00: 29@r57.6
+z= 11.86: 31@r57.5
+z= 21.60: 15@r58.4
+z= 31.90: 32@r57.5, 28@r68.5
+z= 53.12: 10@r58.2, 39@r69.2
+z= 62.48: 32@r57.5, 39@r68.5, 7@r79.5
+z= 71.82: 32@r57.5, 39@r68.5, 6@r79.5
+stage times: lp 3 s, milp 59 s, adam 6 s, slsqp 2 s, moves 341 s

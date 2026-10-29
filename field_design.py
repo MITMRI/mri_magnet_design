@@ -3,7 +3,7 @@
 Field-driven design of an aligned-ring Halbach magnet, in the spirit of CoilGen (target field -> continuous
 source distribution -> discrete layout -> refinement) instead of a genetic search from random designs.
 
-1. Target field: Bx = B0 on check points covering the target cylinder. Bx is harmonic, so its extremes over the
+1. Target field: Bx = B0 on check points covering the target cylinder (or sphere, --sphere-d). Bx is harmonic, so its extremes over the
    region are on its surface and checking the surface is enough.
 2. Sensitivity matrix: field per magnet of a Halbach ring at every candidate (layer radius, z) on a fine grid,
    the magnet equivalent of CoilGen's stream-function basis functions.
@@ -478,6 +478,7 @@ def main():
     ap.add_argument('--cube', type=float, default=6.35)
     ap.add_argument('--br', type=float, default=1320)
     ap.add_argument('--cyl-d', type=float, default=40); ap.add_argument('--cyl-h', type=float, default=40)
+    ap.add_argument('--sphere-d', type=float, help='target a sphere of this diameter instead of the cylinder')
     ap.add_argument('--bore-wall', type=float, default=3); ap.add_argument('--od-wall', type=float, default=3)
     ap.add_argument('--slice-wall', type=float, default=3); ap.add_argument('--layer-wall', type=float, default=2)
     ap.add_argument('--sensors', type=int, default=400, help='check points on the target cylinder (z >= 0 half used)')
@@ -494,7 +495,10 @@ def main():
 
     deadline = T0 + args.time_limit
     geo = Geometry(args)
-    sensors = magsimulator.define_sensor_points_on_cylinder(args.sensors, args.cyl_d/2, args.cyl_h, [0, 0, 0]).position
+    if args.sphere_d:
+        sensors = magsimulator.define_sensor_points_on_sphere(args.sensors, args.sphere_d/2, [0, 0, 0]).position
+    else:
+        sensors = magsimulator.define_sensor_points_on_cylinder(args.sensors, args.cyl_d/2, args.cyl_h, [0, 0, 0]).position
     sensors = sensors[sensors[:, 2] >= 0]
     b0 = args.min_b0 + args.b0_margin
     log(f'{len(sensors)} check points, layer radii ' + ', '.join(f'{r:.2f}' for r in geo.radii) +
