@@ -15,7 +15,10 @@ source distribution -> discrete layout -> refinement) instead of a genetic searc
    difference to the exact cuboid field (magpylib) is added as a correction refreshed every few steps, so the
    objective is exact and the gradient is the dipole one (cube corrections are ~(a/d)^4). First Adam on a smooth
    peak-to-peak (log-sum-exp), then SLSQP on the exact minimax form, then screened +-1 / move-one-magnet changes.
-6. --ga instead refines the same initial design with a genetic algorithm (pymoo) over the same variables and
+6. --robust minimizes the expected as-built peak-to-peak instead of the ideal one: sqrt(P^2 + (kappa*S)^2), with P
+   the ideal peak-to-peak and S the RMS field error from random magnet errors (Br, magnetization angle, placement;
+   see error_s2), in every stage (MILP with S linearized, Adam, SLSQP, count moves).
+7. --ga instead refines the same initial design with a genetic algorithm (pymoo) over the same variables and
    constraints, for comparison.
 
 All runs stop at --time-limit seconds (default 600).
@@ -45,12 +48,17 @@ def ppm(B):
     return 1e6*(B.max()-B.min())/B.mean()
 
 
-def ring_field(r, z, n, phase, sensors, a, br):
-    """Exact Bx (mT) on the sensors from a Halbach ring of n cubes at radius r; a mirror ring at -z unless z == 0."""
+def ring_positions(r, z, n, phase):
+    """Centers and rotation angles (rad) of a Halbach ring of n cubes at radius r, plus its mirror ring at -z unless z == 0."""
     th = phase + 2*np.pi*np.arange(n)/n
     zs = [0.0] if abs(z) < 1e-9 else [z, -z]
     pos = np.vstack([np.stack([r*np.cos(th), r*np.sin(th), np.full(n, zz)], axis=1) for zz in zs])
-    rotz = np.concatenate([2*th for _ in zs])
+    return pos, np.concatenate([2*th for _ in zs])
+
+
+def ring_field(r, z, n, phase, sensors, a, br):
+    """Exact Bx (mT) on the sensors from a Halbach ring of n cubes at radius r; a mirror ring at -z unless z == 0."""
+    pos, rotz = ring_positions(r, z, n, phase)
     n_m, n_s = len(pos), len(sensors)
     B = magpy.getB('Cuboid', observers=np.tile(sensors, (n_m, 1)), position=np.repeat(pos, n_s, axis=0),
                    orientation=R.from_euler('z', np.repeat(rotz, n_s)[:, None]), magnetization=(br, 0, 0),
@@ -69,10 +77,37 @@ class Geometry:
         self.radii = [self.rmin + k*self.dr for k in range(args.layers)]
         assert self.radii[-1] <= self.rmax + 1e-9, f'{args.layers} layers do not fit within OD {args.max_od} mm'
         self.max_magnets, self.min_b0 = args.max_magnets, args.min_b0
+        self.em = (dict(br=args.sigma_br/100, ang=np.deg2rad(args.sigma_ang), pos=args.pos_tol/np.sqrt(3), kappa=args.kappa)
+                   if args.robust else None)
         self.fitc = np.sqrt(3)*args.cube/2    # magnets fit around a ring if 2*pi/n >= 2*asin(fitc/r) (as in magsimulator)
 
     def nmax(self, r):
         return int(np.floor(2*np.pi/(2*np.arcsin(self.fitc/r)) + 1e-9))
+
+
+def error_s2(pos, rot, sensors, geo):
+    """Random-error sensitivity of magnets at pos (rotated rot about z): the sum over magnets and error sources
+    (Br, magnetization tipped in plane and out of plane, position x/y/z, each scaled by its sigma) of the variance over
+    the sensors of the Bx error field, in mT^2. Point dipoles. The p90 peak-to-peak from random errors is ~kappa *
+    sqrt(this) / B0 (kappa ~ 6.3, from Monte Carlo); the uniform part of an error field is harmless and drops out."""
+    em, k = geo.em, geo.br*geo.a**3/(4*np.pi)
+    d = sensors[None, :, :] - pos[:, None, :]
+    r2 = (d**2).sum(-1); ir3 = r2**-1.5; ir5 = ir3/r2; ir7 = ir5/r2
+    mx, my = np.cos(rot)[:, None], np.sin(rot)[:, None]
+    dx, dy, dz = d[..., 0], d[..., 1], d[..., 2]
+    md = mx*dx + my*dy
+    Bx = k*(3*md*dx*ir5 - mx*ir3)
+    dmx, dmy, dmz = k*(3*dx*dx*ir5 - ir3), k*3*dy*dx*ir5, k*3*dz*dx*ir5
+    grad = [k*(3*m*dx*ir5 + 3*md*(j == 0)*ir5 - 15*md*dx*dj*ir7 + 3*mx*dj*ir5)
+            for j, (m, dj) in enumerate([(mx, dx), (my, dy), (0.0, dz)])]
+    rows = [em['br']*Bx, em['ang']*(-dmx*my + dmy*mx), em['ang']*dmz] + [em['pos']*g for g in grad]
+    return sum(R.var(axis=1).sum() for R in rows)
+
+
+def robust_value(P, S2, mean, geo):
+    """Expected as-built peak-to-peak (ppm) from the ideal peak-to-peak P and the error sensitivity S2."""
+    S = 1e6*np.sqrt(S2)/mean
+    return np.sqrt(P**2 + (geo.em['kappa']*S)**2), S
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -136,7 +171,18 @@ def discrete_placement(geo, sensors, b0, dz, nmin, time_limit):
         if len(win) > 1:
             row = np.zeros(nv); row[i_s+win] = 1; add(row, -np.inf, 1)
     row = np.zeros(nv); row[i_n:i_y] = np.tile(mult, L); add(row, -np.inf, geo.max_magnets)
-    c = np.zeros(nv); c[i_t] = 1
+    c = np.zeros(nv); c[i_t] = 2e6/b0                           # ideal peak-to-peak, ppm
+    if geo.em:
+        # error sensitivity per magnet of each candidate ring; kappa*S is linearized around a typical S so the
+        # objective stays linear: kappa*S ~ kappa*(S_ref/2 + S^2/(2*S_ref))
+        E = np.zeros((L, nz))
+        for l, r in enumerate(geo.radii):
+            for j, z in enumerate(zg):
+                pos, rot = ring_positions(r, z, nm[l], 0.0)
+                E[l, j] = error_s2(pos, rot, sensors, geo)/nm[l]
+        E *= (1e6/b0)**2
+        s_ref = np.sqrt(geo.max_magnets*np.median(E/mult[None, :]))
+        c[i_n:i_y] = geo.em['kappa']*E.ravel()/(2*s_ref)
     integrality = np.concatenate([np.ones(2*L*nz + nz), [0]])
     ub = np.concatenate([np.repeat(nm, nz), np.ones(L*nz + nz), [np.inf]])
     res = milp(c, constraints=LinearConstraint(np.array(rows), lo, hi), integrality=integrality,
@@ -236,6 +282,28 @@ class Design:
                 J[:, rg['k']] += dBdz[sel].sum(0)
         return Bx.sum(0), J
 
+    def ring_error_s2(self, i, sensors):
+        rg = self.rings[i]
+        pos, rot = ring_positions(rg['r'], self.z(rg), rg['n'], rg['phase'])
+        return error_s2(pos, rot, sensors, self.geo)
+
+    def error_s2(self, sensors, grad=False, h=1e-3):
+        """Total random-error sensitivity (see error_s2) and, with grad, its gradient wrt the variable vector
+        (finite differences, recomputing only the rings a variable moves)."""
+        per = np.array([self.ring_error_s2(i, sensors) for i in range(len(self.rings))])
+        if not grad:
+            return per.sum()
+        nz, nr = len(self.zpos), len(self.rings)
+        affects = [[i for i, rg in enumerate(self.rings) if rg['k'] == k] for k in range(nz)] + \
+                  [[i] for i in range(nr)]*2
+        x = self.pack(); g = np.zeros(len(x))
+        for j, idx in enumerate(affects):
+            xp = x.copy(); xp[j] += h
+            self.unpack(xp)
+            g[j] = sum(self.ring_error_s2(i, sensors) - per[i] for i in idx)/h
+        self.unpack(x)
+        return per.sum(), g
+
     # constraints g(x) >= 0 and their Jacobian
     def constraints(self, grad=False):
         geo, a = self.geo, self.geo.a
@@ -282,10 +350,12 @@ class Design:
 
 
 def score(d, sensors):
-    """Exact ppm, or inf if a constraint or B0 is violated."""
+    """Exact ppm (with --robust: expected as-built ppm, see robust_value), or inf if a constraint or B0 is violated."""
     B = d.field_exact(sensors)
     if B.mean() < d.geo.min_b0 - 1e-6 or d.constraints().min() < -1e-6:
         return np.inf
+    if d.geo.em:
+        return robust_value(ppm(B), d.error_s2(sensors), B.mean(), d.geo)[0]
     return ppm(B)
 
 
@@ -309,6 +379,13 @@ def refine_adam(d, sensors, steps, deadline, lr=0.05, refresh=25):
         wp = np.exp(beta*(dev - dev.max())); wp /= wp.sum()
         wm = np.exp(-beta*(dev - dev.min())); wm /= wm.sum()
         grad = wp @ ddev - wm @ ddev
+        if d.geo.em:                                             # descend on the expected as-built ppm instead
+            P = (dev.max() + np.log(np.exp(beta*(dev - dev.max())).sum())/beta
+                 - dev.min() + np.log(np.exp(-beta*(dev - dev.min())).sum())/beta)
+            S2, gS2 = d.error_s2(sensors, grad=True)
+            Jr, S = robust_value(P, S2, mean, d.geo)
+            dS = 1e6*(0.5*gS2/np.sqrt(S2)/mean - np.sqrt(S2)*dmean/mean**2)
+            grad = (P*grad + d.geo.em['kappa']**2*S*dS)/Jr
         g, Jg = d.constraints(grad=True)
         viol = np.minimum(g, 0)
         grad += 2*1e4*(viol @ Jg)
@@ -361,9 +438,21 @@ def refine_minimax(d, sensors, deadline, outer=6, maxiter=100):
             tcol = np.concatenate([np.ones(2*ns), np.zeros(1 + len(Jg))])[:, None]
             return np.hstack([top, tcol])
 
+        def obj(x):
+            if not d.geo.em:
+                return x[-1], np.eye(len(x))[-1]
+            # expected as-built ppm: sqrt((2t)^2 + (kappa*S)^2)
+            B, J = fld(x)
+            mean, dmean = B.mean(), J.mean(0)
+            d.unpack(x[:-1])
+            S2, gS2 = d.error_s2(sensors, grad=True)
+            f, S = robust_value(2*x[-1], S2, mean, d.geo)
+            dS = 1e6*(0.5*gS2/np.sqrt(S2)/mean - np.sqrt(S2)*dmean/mean**2)
+            return f, np.concatenate([d.geo.em['kappa']**2*S*dS, [4*x[-1]]])/f
+
         B0 = d.field_exact(sensors)
         xs = np.concatenate([x0, [0.5*ppm(B0)]])
-        res = minimize(lambda x: x[-1], xs, jac=lambda x: np.eye(len(x))[-1], method='SLSQP',
+        res = minimize(obj, xs, jac=True, method='SLSQP',
                        constraints=[{'type': 'ineq', 'fun': cons, 'jac': cjac}],
                        options={'maxiter': maxiter, 'ftol': 1e-6})
         d.unpack(res.x[:-1])
@@ -488,6 +577,11 @@ def main():
     ap.add_argument('--b0-margin', type=float, default=0.1, help='mT above --min-b0 targeted by LP/MILP')
     ap.add_argument('--adam-steps', type=int, default=400)
     ap.add_argument('--time-limit', type=float, default=600)
+    ap.add_argument('--robust', action='store_true', help='minimize the expected as-built ppm (ideal + random magnet errors)')
+    ap.add_argument('--sigma-br', type=float, default=0.8, help='Br spread, %% (1 sigma) for --robust')
+    ap.add_argument('--sigma-ang', type=float, default=0.7, help='magnetization angle spread, degrees (1 sigma) for --robust')
+    ap.add_argument('--pos-tol', type=float, default=0.25, help='placement tolerance, +- mm per axis (uniform) for --robust')
+    ap.add_argument('--kappa', type=float, default=6.3, help='p90 peak-to-peak / RMS error-field ratio (Monte Carlo)')
     ap.add_argument('--ga', action='store_true', help='refine the initial design with a GA instead of gradients')
     ap.add_argument('--pool', type=int, default=0, help='worker processes for the GA')
     ap.add_argument('--start', help='skip steps 1-4 and start from this ledger')
@@ -551,6 +645,9 @@ def main():
 
     d.ledger().to_excel(args.out, index=False)
     B = d.field_exact(sensors)
+    if geo.em:
+        est, S = robust_value(ppm(B), d.error_s2(sensors), B.mean(), geo)
+        log(f'robust objective: ideal {ppm(B):.0f} ppm, random-error RMS {S:.0f} ppm -> expected as-built p90 ~{est:.0f} ppm')
     log(f'done: {d.count()} magnets, {ppm(B):.0f} ppm on the optimization points, B0 {B.mean():.2f} mT -> {args.out}\n'
         + d.summary() + '\nstage times: ' + ', '.join(f'{k} {v:.0f} s' for k, v in times.items()))
 

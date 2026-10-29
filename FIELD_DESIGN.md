@@ -126,6 +126,50 @@ python make_ring_cad.py results/field_design/FD_gd.xlsx --out cad/fd_gd --magnet
 The MATLAB script reports homogeneity on a 51,537-point grid with an independent cuboid model; the Python numbers
 above use 10-20k points on the cylinder surface (`results/field_design/comparison.txt`).
 
+## Optimizing for the as-built field (`--robust`)
+
+The ideal-magnet optimum is slightly *more* sensitive to magnet errors than the previous BEST (more magnets in the
+inner layer and next to the region), so it is ~5-10% worse as built. `--robust` makes every stage minimize the
+expected as-built p90 instead: sqrt(P^2 + (kappa*S)^2), where P is the ideal peak-to-peak and S the RMS field error
+from random magnet errors (Br, magnetization angle in and out of plane, placement x/y/z; point dipoles, summed ring by
+ring). kappa = 6.3 was calibrated against the Monte Carlo; the estimate ranks designs correctly and is within a few
+percent of it. Default error model: Br 0.8%, angle 0.7 degrees (both measured-typical for commercial N42 cubes,
+Blümler et al. 2021), placement +-0.25 mm per axis (`--sigma-br`, `--sigma-ang`, `--pos-tol`).
+
+```bash
+python field_design.py results/field_design/FD_robust.xlsx --robust      # ~5.5 min
+```
+
+Same error model, 40 x 40 mm cylinder, 2,400 random builds each (`results/field_design/comparison_robust.txt`):
+
+| Design | Ideal ppm | As built, typical | As built, p90 | Magnets inner/middle/outer | Length / OD | Required iHc (40 C, 1.2x) |
+|---|---|---|---|---|---|---|
+| Previous BEST | 430 | 3,191 | 4,225 | 267 / 256 / 126 | 143.9 / 184 mm | 941 kA/m (N42) |
+| `FD_gd` (ideal-optimized) | 45 | 3,447 | 4,539 | 314 / 300 / 36 | 148.0 / 174 mm | 953 kA/m (N42, no margin) |
+| **`FD_robust`** (as-built optimized) | 639 | **2,423** | **3,234** | 206 / 430 / 14 | 142.8 / 178 mm | 1,070 kA/m (N42M or better) |
+
+The robust design gives up ideal homogeneity (639 ppm) for ~24% less as-built spread than the previous BEST. It
+moves magnets out of the inner layer into the middle one (rings pushed out to r ~ 70-72 mm), where each magnet's
+errors matter less, and fills the middle with four tightly packed slices (z = 4.7-32.7 mm).
+
+Ring layout (`n @ r`, mm):
+
+| Slice z (mm) | Rings |
+|---|---|
+| +-4.7 | 39 @ 70.4, 7 @ 81.4 |
+| +-14.0 | 39 @ 68.3 |
+| +-23.4 | 9 @ 60.7, 40 @ 71.7 |
+| +-32.7 | 39 @ 70.0 |
+| +-49.5 | 32 @ 58.7, 35 @ 69.7 |
+| +-58.9 | 32 @ 57.5, 23 @ 68.5 |
+| +-68.2 | 30 @ 57.5 |
+
+**Demagnetization:** the full, closely stacked middle-layer rings put more reverse field on each other (706 kA/m
+worst inside a magnet vs ~625). N42 (955 kA/m) still holds at 40 C without a safety factor, and with the 1.2x factor
+only near room temperature; for margin use N42M (1,114 kA/m) or a higher-coercivity grade.
+
+Figure: `figures/compare_magnets3D_views_robust.png` (previous BEST, `FD_gd`, `FD_robust`).
+
 ## Notes and limits
 
 - The MILP treats each ring's field as proportional to its magnet count. That is exact for large rings, but small
@@ -139,7 +183,7 @@ above use 10-20k points on the cylinder surface (`results/field_design/compariso
 
 ## Next steps
 
-1. Optimize the as-built metric in the gradient stage: `magsimulator.tolerance_homogeneity` already has the
-   per-magnet error sensitivities, so the expected spread from magnet errors can be added to the objective.
+1. Model the systematic part of placement error: magnets in loose pockets are pushed and twisted (up to ~1.3 degrees
+   with 0.15 mm clearance) in directions set by their neighbors, which O'Reilly & Webb found dominated their build.
 2. Assign measured magnets (Br, angle) to positions with the same gradient machinery.
 3. Generate and check the ring CAD for `FD_gd.xlsx`.

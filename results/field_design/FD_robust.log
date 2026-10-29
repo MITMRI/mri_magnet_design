@@ -1,0 +1,32 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 9.35 mm, z <= 71.83 mm
+[   2.5 s] continuous source (LP): 59.4 ppm at 45.1 mT with 650 magnets (per layer [329, 222, 98])
+[  26.7 s] discrete placement (MILP, Optimization terminated successfully. (HiGHS Status 7: Optimal)): 308 ppm linearized, exact 491 ppm, B0 45.10 mT, 650 magnets, 7 slices
+z=  4.67: 39@r68.5, 10@r79.5
+z= 14.68: 39@r68.5
+z= 24.68: 8@r57.5, 38@r68.5
+z= 34.67: 36@r68.5
+z= 51.67: 32@r57.5, 38@r68.5
+z= 61.67: 30@r57.5, 23@r68.5
+z= 71.67: 32@r57.5
+[  44.1 s] gradient descent (Adam): 3238 ppm
+[  73.3 s] minimax (SLSQP): 3158 ppm
+[ 136.4 s]   ring 1: -1, ring 4: +1 -> 650 magnets, 3156 ppm
+[ 160.1 s]   ring 1: -1, ring 4: +1 -> 650 magnets, 3152 ppm
+[ 180.2 s]   ring 7: -1, ring 5: +1 -> 650 magnets, 3148 ppm
+[ 200.4 s]   ring 7: -1, ring 5: +1 -> 650 magnets, 3144 ppm
+[ 220.6 s]   ring 7: -1, ring 5: +1 -> 650 magnets, 3140 ppm
+[ 241.0 s]   ring 10: -1, ring 8: +1 -> 650 magnets, 3138 ppm
+[ 261.3 s]   ring 10: -1, ring 8: +1 -> 650 magnets, 3137 ppm
+[ 282.1 s]   ring 4: -1, ring 3: +1 -> 650 magnets, 3132 ppm
+[ 305.1 s]   ring 1: -1, ring 4: +1 -> 650 magnets, 3130 ppm
+[ 326.7 s] magnet count moves: 3130 ppm
+[ 326.8 s] robust objective: ideal 568 ppm, random-error RMS 489 ppm -> expected as-built p90 ~3130 ppm
+[ 326.8 s] done: 650 magnets, 568 ppm on the optimization points, B0 45.00 mT -> results/field_design/FD_robust.xlsx
+z=  4.67: 39@r70.4, 7@r81.4
+z= 14.03: 39@r68.3
+z= 23.38: 9@r60.7, 40@r71.7
+z= 32.72: 39@r70.0
+z= 49.54: 32@r58.7, 35@r69.7
+z= 58.89: 32@r57.5, 23@r68.5
+z= 68.24: 30@r57.5
+stage times: lp 2 s, milp 24 s, adam 17 s, slsqp 29 s, moves 253 s

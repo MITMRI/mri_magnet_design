@@ -1,0 +1,5 @@
+error model: Br 0.8%, angle 0.7 deg, position +-0.25 mm (sigma 0.144); 40x40 mm cylinder; 6 x 400 random builds
+design                     mags     B0 ideal ppm  typical    p90    len   OD  layers in/mid/out
+old BEST                    649  45.00       430     3191   4225  143.9  184        267/256/126
+FD_gd (ideal-optimized)     650  45.00        45     3447   4539  148.0  174         314/300/36
+FD_robust (as-built opt.)   650  45.00       639     2423   3234  142.8  178         206/430/14
