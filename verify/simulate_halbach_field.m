@@ -22,7 +22,13 @@ nGrid     = 41;        % grid points per axis inside the target region
 
 %% ---------------- Load layout ---------------------------------------------
 here = fileparts(mfilename('fullpath'));
-T = readtable(fullfile(here, 'BEST_bore100_cyl40x40_649mag_427ppm.xlsx'), ...
+% LAYOUT / OUTDIR environment variables pick another ledger and figure folder
+layoutFile = getenv('LAYOUT');
+if isempty(layoutFile), layoutFile = fullfile(here, 'BEST_bore100_cyl40x40_649mag_427ppm.xlsx'); end
+outDir = getenv('OUTDIR');
+if isempty(outDir), outDir = here; end
+if ~exist(outDir, 'dir'), mkdir(outDir); end
+T = readtable(layoutFile, ...
               'VariableNamingRule', 'preserve');
 pos = [T.('X-pos') T.('Y-pos') T.('Z-pos')];              % mm
 rot = [T.('X-rot') T.('Y-rot') T.('Z-rot')];              % deg
@@ -99,7 +105,7 @@ axis equal; grid on; view(35, 22);
 xlabel('x [mm]'); ylabel('y [mm]'); zlabel('z [mm]');
 title(sprintf('Halbach array (%d magnets): |B|, centre = %.1f mT', nMag, B0*1e3));
 lighting gouraud; camlight;
-exportgraphics(f1, fullfile(here, 'fig1_layout_3d.png'), 'Resolution', 150);
+exportgraphics(f1, fullfile(outDir, 'fig1_layout_3d.png'), 'Resolution', 150);
 
 %% ---------------- Figure 2: in-bore field lines ---------------------------
 nQ = 15; q = linspace(-45, 45, nQ);
@@ -120,7 +126,7 @@ colormap(f2, turbo); clim([0 1.5*B0]);
 cb = colorbar; cb.Label.String = '|B| [T]';
 axis equal tight; xlabel('x [mm]'); ylabel('y [mm]');
 title('z = 0 plane: |B| (colour), field direction (black), magnet north (red)');
-exportgraphics(f2, fullfile(here, 'fig2_field_direction_z0.png'), 'Resolution', 150);
+exportgraphics(f2, fullfile(outDir, 'fig2_field_direction_z0.png'), 'Resolution', 150);
 
 %% ---------------- Figure 3: homogeneity maps (ppm) ------------------------
 nH = 81; h = linspace(-dsvDiam/2, dsvDiam/2, nH);
@@ -143,7 +149,7 @@ for i = 1:3
 end
 colormap(f3, redblue(256));
 title(tl, sprintf('Field deviation in %g mm target region, B_0 = %.2f mT', dsvDiam, B0*1e3));
-exportgraphics(f3, fullfile(here, 'fig3_homogeneity_ppm.png'), 'Resolution', 150);
+exportgraphics(f3, fullfile(outDir, 'fig3_homogeneity_ppm.png'), 'Resolution', 150);
 
 %% ---------------- Figure 4: 3D iso-surfaces of deviation ------------------
 Dppm = nan(size(X)); Dppm(inDSV) = (Bmag - B0) / B0 * 1e6;
@@ -163,7 +169,7 @@ drawCylinder(dsvDiam/2, dsvLength);
 axis equal; grid on; view(35, 22); camlight; lighting gouraud;
 xlabel('x [mm]'); ylabel('y [mm]'); zlabel('z [mm]');
 title(sprintf('Deviation from B_0 in target cylinder; iso-surfaces at %+.0f / %+.0f ppm', lv));
-exportgraphics(f4, fullfile(here, 'fig4_deviation_3d.png'), 'Resolution', 150);
+exportgraphics(f4, fullfile(outDir, 'fig4_deviation_3d.png'), 'Resolution', 150);
 
 %% ---------------- Figure 5: line profiles ---------------------------------
 t = linspace(-50, 50, 401)';
@@ -184,9 +190,9 @@ for i = 1:3
 end
 xline([-20 20], ':'); grid on; xlabel('position [mm]'); ylabel('deviation [ppm]');
 legend('along x', 'along y', 'along z', 'Location', 'best'); title('Deviation from B_0 near centre');
-exportgraphics(f5, fullfile(here, 'fig5_profiles.png'), 'Resolution', 150);
+exportgraphics(f5, fullfile(outDir, 'fig5_profiles.png'), 'Resolution', 150);
 
-fprintf('\nFigures written to %s\n', here);
+fprintf('\nFigures written to %s\n', outDir);
 
 %% ======================= Local functions ==================================
 function M = Rx(d), M = [1 0 0; 0 cosd(d) -sind(d); 0 sind(d) cosd(d)]; end
