@@ -17,7 +17,7 @@ Geometry options must match the shim_design.py run (cube, trays, bore, fit, tray
 checks the cube centre radius it builds against the one in the solution.
 
 usage:
-  python make_shim_cad.py results/shim/FD_robust_sim_b0.csv --holder cad/fd_robust --out cad/fd_robust_shim
+  python make_shim_cad.py results/shim/FD_gd_sim6_b0.csv --holder cad/fd_gd --out cad/fd_gd_shim
 Outputs in --out: sleeve.step/.stl, tray_<k>.step/.stl (trays with cubes), shim_assembly.step (sleeve, trays and
 shim cubes in place, same coordinates as the holder's assembly.step), tray_loading.png, fit_section.png, trays.csv.
 """

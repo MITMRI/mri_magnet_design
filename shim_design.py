@@ -29,8 +29,8 @@ Field maps:
                   checked on the target cylinder; for studying what shimming buys before anything is built
 
 usage:
-  python shim_design.py results/field_design/FD_robust.xlsx results/shim/FD_robust_sim --simulate 3
-  python shim_design.py results/field_design/FD_robust.xlsx results/shim/measured --map map.csv
+  python shim_design.py results/field_design/FD_gd.xlsx results/shim/FD_gd_sim6 --simulate 3
+  python shim_design.py results/field_design/FD_gd.xlsx results/shim/measured --map map.csv
 Outputs: <out>_b<i>.csv (one row per shim cube: tray, z, orientation, position, magnetization), <out>_b<i>.npz,
 <out>.log.
 """
@@ -282,7 +282,7 @@ def main():
     ap.add_argument('--tray-wall', type=float, default=0.8, help='resin between pockets along a tray, mm')
     ap.add_argument('--max-cubes', type=int, default=60)
     ap.add_argument('--min-b0', type=float, default=44.8, help='mT, after shimming')
-    ap.add_argument('--starts', type=int, default=3, help='placement offsets tried before refinement')
+    ap.add_argument('--starts', type=int, default=6, help='placement offsets tried before refinement')
     ap.add_argument('--iters', type=int, default=200, help='SLSQP iterations per start')
     args = ap.parse_args()
 

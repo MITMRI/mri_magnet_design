@@ -54,8 +54,8 @@ disassembly); `shim_design.py` places 1/8" cubes from a measured field map with 
 `make_shim_cad.py` generates the sleeve, trays and loading guide.
 
 ```bash
-python shim_design.py results/field_design/FD_robust.xlsx results/shim/round1 --map map.csv
-python make_shim_cad.py results/shim/round1_map.csv --holder cad/fd_robust --out cad/shim_round1
+python shim_design.py results/field_design/FD_gd.xlsx results/shim/round1 --map map.csv
+python make_shim_cad.py results/shim/round1_map.csv --holder cad/fd_gd --out cad/shim_round1
 ```
 
 ## Compact magnet design study (this fork)

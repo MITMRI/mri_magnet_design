@@ -186,5 +186,5 @@ Figure: `figures/compare_magnets3D_views_robust.png` (previous BEST, `FD_gd`, `F
 1. Model the systematic part of placement error: magnets in loose pockets are pushed and twisted (up to ~1.3 degrees
    with 0.15 mm clearance) in directions set by their neighbors, which O'Reilly & Webb found dominated their build.
 2. Assign measured magnets (Br, angle) to positions with the same gradient machinery.
-3. Generate and check the ring CAD for `FD_gd.xlsx`. (Done for `FD_robust.xlsx`: `cad/fd_robust`, see CAD.md.)
+3. ~~Generate and check the ring CAD for `FD_gd.xlsx`.~~ Done (`cad/fd_gd`, also `cad/fd_robust`), see CAD.md.
 4. Passive shimming after the build: done as a slide-in sleeve, see [SHIMMING.md](SHIMMING.md).

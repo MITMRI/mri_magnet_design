@@ -44,15 +44,16 @@ Side view of the stack (z is the bore axis; B0 points along +x, marked by a V no
 All parts share 8 M3 bolt holes outside the magnets and 6 M2 holes near the bore. One M3 hole is shifted 10 degrees off
 the even spacing, so parts only stack in the correct rotation and the right way up.
 
-### Field-driven robust design and shim sleeve
+### Field-driven design and shim sleeve
 
-The current design is `results/field_design/FD_robust.xlsx` (FIELD_DESIGN.md): 650 cubes in 14 slabs and 2 FDM
-spacers (8.16 mm, printed twice), OD 185.9 mm, stack z -74.56 to +71.56 mm, 8 M3 rods at r 89.8 and 6 M2 rods at r 52.
-Pocket-to-pocket walls go down to 1.14 mm (same range as the previous design; the SLA coupon's thin-wall pairs test it).
+The current design is `results/field_design/FD_gd.xlsx` (FIELD_DESIGN.md): 650 cubes in 12 slabs and 3 FDM spacers
+(14.17 mm, printed twice, and 7.14 mm), OD 182.0 mm, stack z -77.14 to +74.14 mm, 8 M3 rods at r 87.8 and 6 M2 rods at
+r 52 (they only fit at 8.5-62 and 210-242 degrees). Pocket-to-pocket walls go down to 1.02 mm, as in the previous design
+(the SLA coupon's thin-wall pairs test it).
 
 ```bash
-python make_ring_cad.py results/field_design/FD_robust.xlsx --out cad/fd_robust --magnets
-python make_shim_cad.py results/shim/FD_robust_sim_b0.csv --holder cad/fd_robust --out cad/fd_robust_shim
+python make_ring_cad.py results/field_design/FD_gd.xlsx --out cad/fd_gd --magnets
+python make_shim_cad.py results/shim/FD_gd_sim6_b0.csv --holder cad/fd_gd --out cad/fd_gd_shim
 ```
 
 The second command makes the passive shim sleeve and trays for one shim solution ([SHIMMING.md](SHIMMING.md)). The
@@ -60,6 +61,9 @@ sleeve slides into the bore and its flange sits on the top end cap, so **design 
 outer face on the top cap, and M2 nuts no taller than 3 mm** (they sit inside 7 mm holes in the flange). `holes.csv`
 in the holder folder lists every bolt hole for that purpose. `shim_assembly.step` uses the same coordinates as
 `assembly.step`.
+
+The robust alternative `FD_robust.xlsx` generates the same way (`--out cad/fd_robust`): 14 slabs, 2 spacers
+(8.16 mm), OD 185.9 mm, stack z -74.56 to +71.56 mm.
 
 ## Setup
 
