@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Picture of a shim_design.py solution in the slide-in sleeve: 3D view of the main array (front half cut away) with the
-trays and shim cubes and one tray pulled out, an end view of the sleeve, and the busiest tray seen from the bore axis.
+trays and shim cubes (busiest tray highlighted), an end view of the sleeve, and the busiest tray seen from the bore axis.
 Sleeve dimensions are the make_shim_cad.py defaults.
 
 usage:
@@ -38,7 +38,7 @@ def cube_axes(t, k, p):
     if k != 0: return er, et, ez
     return er, np.cos(p)*et - np.sin(p)*ez, np.sin(p)*et + np.cos(p)*ez   # turned about the radial axis by psi
 
-counts = np.bincount(trs, minlength=ntr); pull = int(np.argmax(counts)); PULL = 120.0; AZ = -55.0
+counts = np.bincount(trs, minlength=ntr); pull = int(np.argmax(counts)); AZ = -55.0
 vdir = np.array([np.cos(np.deg2rad(AZ)), np.sin(np.deg2rad(AZ))])
 
 fig = plt.figure(figsize=(19, 15))
@@ -50,23 +50,21 @@ for _, row in L.iterrows():
     polys += box(row[['X-pos', 'Y-pos', 'Z-pos']].values.astype(float), *frame(np.deg2rad(row['Z-rot'])), a_m/2, a_m/2, a_m/2)
 ax.add_collection3d(Poly3DCollection(polys, facecolors='#c4c4c4', edgecolors='#8a8a8a', linewidths=0.1))
 for t in range(ntr):
-    er, et, ez = frame(th[t]); dz = PULL if t == pull else 0.0
-    ax.add_collection3d(Poly3DCollection(box(rtr*er + dz*ez, er, et, ez, a/2 + 0.6, tw/2, tray_len/2),
-                        facecolors=(0.55, 0.5, 0.75, 0.06 if dz == 0 else 0.25), edgecolors=(0.35, 0.3, 0.55, 0.25), linewidths=0.3))
+    er, et, ez = frame(th[t])
+    ax.add_collection3d(Poly3DCollection(box(rtr*er, er, et, ez, a/2 + 0.6, tw/2, tray_len/2),
+                        facecolors=(0.55, 0.5, 0.75, 0.25 if t == pull else 0.06), edgecolors=(0.35, 0.3, 0.55, 0.25), linewidths=0.3))
 sp, sc = [], []
 for t, zz, k, p in zip(trs, z, kind, psi):
-    er, _, ez = frame(th[t]); dz = PULL if t == pull else 0.0
-    sp += box(rtr*er + (zz + dz)*ez, *cube_axes(th[t], k, p), a/2, a/2, a/2); sc += [COLS[cat(k)]]*6
+    er, _, ez = frame(th[t])
+    sp += box(rtr*er + zz*ez, *cube_axes(th[t], k, p), a/2, a/2, a/2); sc += [COLS[cat(k)]]*6
 ax.add_collection3d(Poly3DCollection(sp, facecolors=sc, edgecolors='k', linewidths=0.3))
 phi = np.linspace(0, 2*np.pi, 200)
 for R_ in (od/2, bore/2, r_clear):
     for zz in (-75, 75):
         ax.plot(R_*np.cos(phi), R_*np.sin(phi), zz, color='#555', lw=0.8, alpha=0.6)
-er = frame(th[pull])[0]
-ax.text(*(rtr*er*1.6 + [0, 0, PULL + tray_len/2 + 8]), 'tray slides out\nthrough the end cap', fontsize=10, ha='center')
 lim = od/2 + 5
-ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_zlim(-lim, PULL + lim/2)
-ax.set_box_aspect((2*lim, 2*lim, PULL + 1.5*lim)); ax.view_init(elev=22, azim=AZ)
+ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_zlim(-lim, lim)
+ax.set_box_aspect((2*lim, 2*lim, 2*lim)); ax.view_init(elev=22, azim=AZ)
 ax.set_xlabel('x (mm), B0'); ax.set_ylabel('y (mm)'); ax.set_zlabel('z (mm), bore axis')
 ax.text2D(0.02, 0.02, 'front half of the main array cut away', transform=ax.transAxes, fontsize=10, color='#555')
 ax.set_title(f'Main array: {sys.argv[1].split("/")[-1]} ({len(L)} magnets)\n{ntr} shim trays in a sleeve inside the bore (r = {rtr:.1f} mm); {len(z)} shim cubes ({a:g} mm), '
@@ -110,7 +108,7 @@ for i in sel:
         ax3.plot(zz, 0, marker='.' if k < 0 else 'x', ms=6, color='k', mew=1.6)
 ax3.set_xlim(z0 - 3, z0 + tray_len + 30); ax3.set_ylim(-tw, tw); ax3.set_aspect('equal')
 ax3.set_xlabel('z along the bore (mm)'); ax3.set_ylabel('tangential (mm)')
-ax3.set_title(f'The pulled-out tray, seen from the bore axis: {len(sel)} cubes at free z positions; arrows = magnetization '
+ax3.set_title(f'The busiest tray (highlighted above), seen from the bore axis: {len(sel)} cubes at free z positions; arrows = magnetization '
               f'(flat cubes, any angle); dot = radially inward (toward you), cross = outward', fontsize=11)
 fig.legend(handles=[Patch(fc=COLS['flat'], ec='k', label='flat: magnetization in the tangential-z plane, any angle'),
                     Patch(fc=COLS['out'], ec='k', label='standing: radially outward'),
