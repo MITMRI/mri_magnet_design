@@ -102,10 +102,11 @@ def ring_table(geo, r, n, zs, sensors):
     return np.array([blk.sum(0) for blk in np.split(B, np.cumsum(sizes)[:-1])])
 
 
-def milp_design(geo, sensors, eps, dr_grid, dz, ripple, time_limit):
+def milp_design(geo, sensors, eps, dr_grid, dz, ripple, time_limit, b0_target=None):
     """Maximize B0 s.t. (1-eps) B0 <= Bx <= (1+eps) B0 on the sensors, with integer magnet counts per candidate ring
     (radius and z on a grid). A ring's field is taken as n x its per-magnet field, which holds when the ring's
-    ripple, ~(R/r)^(n-1) for a sphere of radius R, is small: rings must have at least that many blocks."""
+    ripple, ~(R/r)^(n-1) for a sphere of radius R, is small: rings must have at least that many blocks.
+    With b0_target: after maximizing B0, require B0 >= b0_target and use as few magnets as possible."""
     import gurobipy as gp
     radii = np.arange(geo.rmax, geo.rmin - 1e-9, -dr_grid)[::-1]        # grid anchored at the OD limit
     zs = np.concatenate([[0.0], np.arange(geo.pitch / 2, geo.zmax + 1e-9, dz)])
@@ -137,6 +138,13 @@ def milp_design(geo, sensors, eps, dr_grid, dz, ripple, time_limit):
             m.addConstr(s[win].sum() <= 1)
     m.setObjective(b0.sum(), gp.GRB.MAXIMIZE)
     m.optimize()
+    if b0_target is not None and m.SolCount and b0.X[0] >= b0_target:   # then: fewest magnets with B0 >= target
+        log(f'MILP: max B0 {b0.X[0]:.1f} mT; now fewest magnets with B0 >= {b0_target} mT')
+        for v in (n, y, s, b0):
+            v.Start = v.X
+        m.addConstr(b0 >= b0_target)
+        m.setObjective((n * np.where(zs > 0, 2, 1)[None]).sum(), gp.GRB.MINIMIZE)
+        m.optimize()
     if m.SolCount == 0:
         raise SystemExit(f'Gurobi found no solution (status {m.Status})')
     msg = f'Gurobi status {m.Status}, gap {100 * m.MIPGap:.2f}%, {m.Runtime:.0f} s'
@@ -327,6 +335,7 @@ def main():
     ap.add_argument('out')
     ap.add_argument('--sphere-d', type=float, default=120)
     ap.add_argument('--ppm', type=float, default=60, help='peak-to-peak limit on the sphere')
+    ap.add_argument('--b0', type=float, help='after maximizing B0, keep B0 >= this (mT) with the fewest magnets')
     ap.add_argument('--margin', type=float, default=8, help='ppm held back during optimization')
     ap.add_argument('--bore', type=float, default=140, help='clear bore diameter, mm')
     ap.add_argument('--max-od', type=float, default=325, help='holder OD incl. plastic, mm')
@@ -353,22 +362,27 @@ def main():
     eps = (a.ppm - a.margin) * 1e-6 / 2
     log(f'r {geo.rmin:.1f}-{geo.rmax:.1f} mm, axial pitch {geo.pitch} mm, z <= {geo.zmax:.1f} mm')
 
-    rings, b_lin, msg = milp_design(geo, sensors, eps, a.dr_grid, a.dz, a.ripple, a.milp_time)
+    rings, b_lin, msg = milp_design(geo, sensors, eps, a.dr_grid, a.dz, a.ripple, a.milp_time, a.b0)
     d = Design(geo, rings)
     B = d.field(sensors)
     log(f'MILP ({msg}): {b_lin:.1f} mT linear, exact {B.mean():.1f} mT / {ppm(B):.0f} ppm, {d.count()} magnets\n'
         + d.summary())
-    start = d.copy()
-    b = add_magnets(d, sensors, eps, T0 + a.time_limit)
-    if b is None:                                   # refinement never got under the cap: keep the MILP design
-        log('refinement found no feasible design, keeping the MILP design')
-        d = start
+    if a.b0 is None:                                # refinement raises B0, so only when B0 is not fixed
+        start = d.copy()
+        if add_magnets(d, sensors, eps, T0 + a.time_limit) is None:   # never got under the cap: keep the MILP design
+            log('refinement found no feasible design, keeping the MILP design')
+            d = start
 
     dense = sphere_points(20000, a.sphere_d / 2)
     Bd = d.field(dense)
+    rmin, rmax = min(rg['r'] for rg in d.rings), max(rg['r'] for rg in d.rings)
+    half = geo.a / np.sqrt(2)                                           # block corner radius
     info = dict(B0_mT=round(float(Bd.mean()), 2), B_center_mT=round(float(d.field(np.zeros((1, 3)))[0]), 2),
-                ppm_120mm_sphere=round(float(ppm(Bd)), 1), magnets=d.count(), bore=a.bore, br_mT=a.br,
-                milp_linear_mT=round(float(b_lin), 1), slices=d.table())
+                ppm_120mm_sphere=round(float(ppm(Bd)), 1), magnets=d.count(),
+                magnet_mass_kg=round(d.count() * 0.03073, 1),
+                magnet_length_mm=round(2 * max(d.z) + geo.h, 1),
+                bore_id_mm=round(2 * (rmin - half - a.bore_wall), 1), od_mm=round(2 * (rmax + half + a.od_wall), 1),
+                br_mT=a.br, milp_linear_mT=round(float(b_lin), 1), slices=d.table())
     stem = a.out.rsplit('.', 1)[0]
     d.ledger().to_excel(a.out, index=False)
     with open(stem + '.json', 'w') as f:

@@ -1,0 +1,19 @@
+$ python field_design_12cm.py results/12cm/L346.xlsx --bore 200 --bore-wall 2 --od-wall 2 --ppm 50 --margin 1 --max-length 346 --ripple 5e-7 --dr-grid 5 --dz 2 --milp-time 150 --time-limit 300
+(Gurobi 13.0.3, academic license; SLSQP step lines omitted)
+[   0.0 s] r 111.0-151.5 mm, axial pitch 28.4 mm, z <= 160.3 mm
+[   3.2 s] MILP: 9 radii (112-152 mm) x 75 z positions, 300 check points
+[ 153.3 s] MILP: 84.9 mT, upper bound 85.9 mT (Gurobi status 9, gap 1.15%, 150 s)
+[ 153.5 s] MILP (Gurobi status 9, gap 1.15%, 150 s): 84.9 mT linear, exact 84.9 mT / 48 ppm, 858 magnets
+  z = +-  0.00: 20 @ r 131.5, 44 @ r 151.5
+  z = +- 30.20: 25 @ r 131.5, 46 @ r 151.5
+  z = +- 66.20: 34 @ r 131.5, 38 @ r 151.5
+  z = +- 96.20: 20 @ r 131.5, 42 @ r 151.5
+  z = +-130.20: 35 @ r 131.5, 32 @ r 151.5
+  z = +-160.20: 35 @ r 111.5, 42 @ r 131.5, 48 @ r 151.5
+[ 234.7 s] done: B0 84.90 mT, 48.6 ppm (20k points), 858 magnets
+  z = +-  0.00: 20 @ r 131.5, 44 @ r 151.5
+  z = +- 30.20: 25 @ r 131.5, 46 @ r 151.5
+  z = +- 66.20: 34 @ r 131.5, 38 @ r 151.5
+  z = +- 96.20: 20 @ r 131.5, 42 @ r 151.5
+  z = +-130.20: 35 @ r 131.5, 32 @ r 151.5
+  z = +-160.20: 35 @ r 111.5, 42 @ r 131.5, 48 @ r 151.5
