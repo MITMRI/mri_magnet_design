@@ -58,6 +58,8 @@ python shim_design.py results/field_design/FD_gd.xlsx results/shim/round1 --map 
 python make_shim_cad.py results/shim/round1_map.csv --holder cad/fd_gd --out cad/shim_round1
 ```
 
+How densely to map the field before shimming (harmonics, sensor spacing and accuracy): [FIELD_MAPPING.md](FIELD_MAPPING.md).
+
 ## Compact magnet design study (this fork)
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the 100 mm bore / 40 x 40 mm region design built from 1/4" N42 cubes, the tools

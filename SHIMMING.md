@@ -156,6 +156,45 @@ Print the sleeve and trays in the same resin as the rings (Rigid 4000); check th
 pocket fit with a short test piece first (clearances `--slide`, `--pocket-tol`). Load each tray from `tray_loading.png`
 (identify N with a compass or a marked reference cube), slide it in until the head sits on the flange, re-map.
 
+## After round 1: second round, second layer, active shims
+
+Simulated on the three `FD_gd` builds above, with real shim cubes (each cube's Br and angle error is drawn once and
+moves with it), a 190-point sphere map with 1 uT noise (FIELD_MAPPING.md), and the gradient coils' DC offsets as ideal
+first-order correction. Peak-to-peak ppm over the 40 x 40 mm cylinder. Scratch scripts, not in the repo.
+
+**Where the residual comes from.** Two parts:
+
+| Source | Size | Harmonic degree | Removed by |
+|---|---|---|---|
+| Shim cubes' own errors (angle, Br) | 185-440 ppm | mostly 0-4 | a second round |
+| 60 discrete cubes instead of the LP's smooth distribution | 330-620 ppm | mostly 5-11 | finer / closer cubes, not low-order coils |
+
+With perfect cubes the sleeve leaves almost nothing in degrees 1-2 (28 / 60 ppm RMS on the 28.3 mm sphere) and peaks at
+degrees 5-9 (~180-260 ppm), so low-order active shims have little to act on.
+
+**Options:**
+
+| Build | One layer | + 1st order | First layer re-tweaked + 1st order | **Second inner layer (60 x 1/16") + 1st order** |
+|---|---|---|---|---|
+| 0 | 658 | 525 | 360 | **374** |
+| 1 | 612 | 496 | 345 | **273** |
+| 2 | 809 | 696 | 591 | **357** |
+
+The first two columns are medians over 30 shim-cube error draws with a perfect map. A perfect active 2nd-order set
+(5 more channels) would take off only ~100 ppm more from the one-layer case.
+
+- **Re-tweak:** reprint the trays with each cube moved ~0.3-0.8 mm / ~1 deg (small sequential-LP steps, kept only if
+  the field improves). It removes the cube errors but cannot go below the round-1 layout's own floor (build 2).
+- **Second layer:** a second sleeve inside the first (cube centres at r = 42.1 mm, 5.85 mm further in), placed by
+  `shim_design.py`'s LP + placement + SLSQP on the measured field with layer 1 left as is. 1/16" cubes have 1/8 the
+  moment, so their own errors add only ~0-40 ppm. It also beats the one-layer floor on two of three builds. Cost: clear
+  bore 88.3 -> ~76.6 mm, a second printed sleeve, and harder-to-handle cubes.
+- **Gradient offsets** after either: 15-35 ppm, 0.01-0.05 mT/m. 2nd-order active coils are not worth it.
+
+Caveats: 3 builds, 3 placement starts for the second layer (starts vary from 257 to 1,017 ppm, so more starts may
+do better); the shim was not co-optimized with the gradient offsets; cube-cube interaction, sensor gain mismatch and
+drift are not modelled.
+
 ## Limits and next steps
 
 - The map is the input: its accuracy and extent set what the shim can fix. Map at least the target cylinder's surface

@@ -56,24 +56,26 @@ def ring_positions(r, z, n, phase):
     return pos, np.concatenate([2*th for _ in zs])
 
 
-def ring_field(r, z, n, phase, sensors, a, br):
-    """Exact Bx (mT) on the sensors from a Halbach ring of n cubes at radius r; a mirror ring at -z unless z == 0."""
+def ring_field(r, z, n, phase, sensors, a, br, h=None):
+    """Exact Bx (mT) on the sensors from a Halbach ring of n a x a x h cuboids (h along z, default a) at radius r; a mirror ring at -z unless z == 0."""
     pos, rotz = ring_positions(r, z, n, phase)
     n_m, n_s = len(pos), len(sensors)
     B = magpy.getB('Cuboid', observers=np.tile(sensors, (n_m, 1)), position=np.repeat(pos, n_s, axis=0),
                    orientation=R.from_euler('z', np.repeat(rotz, n_s)[:, None]), magnetization=(br, 0, 0),
-                   dimension=(a,)*3)
+                   dimension=(a, a, a if h is None else h))
     return B[:, 0].reshape(n_m, n_s).sum(axis=0)
 
 
 class Geometry:
     def __init__(self, args):
         self.a, self.br = args.cube, args.br
-        self.pitch = args.cube + args.slice_wall                       # slice spacing along z
+        self.h = args.height or args.cube                             # magnet length along z (cube if not given)
+        self.vol = self.a*self.a*self.h
+        self.pitch = self.h + args.slice_wall                          # slice spacing along z
         self.dr = np.sqrt(2)*args.cube + args.layer_wall              # layer spacing (in-plane cube diagonal + resin)
         self.rmin = args.bore/2 + args.bore_wall + args.cube/np.sqrt(2)
         self.rmax = args.max_od/2 - args.od_wall - args.cube/np.sqrt(2)
-        self.zmax = (args.max_length - args.cube)/2
+        self.zmax = (args.max_length - self.h)/2
         self.radii = [self.rmin + k*self.dr for k in range(args.layers)]
         assert self.radii[-1] <= self.rmax + 1e-9, f'{args.layers} layers do not fit within OD {args.max_od} mm'
         self.max_magnets, self.min_b0 = args.max_magnets, args.min_b0
@@ -90,7 +92,7 @@ def error_s2(pos, rot, sensors, geo):
     (Br, magnetization tipped in plane and out of plane, position x/y/z, each scaled by its sigma) of the variance over
     the sensors of the Bx error field, in mT^2. Point dipoles. The p90 peak-to-peak from random errors is ~kappa *
     sqrt(this) / B0 (kappa ~ 6.3, from Monte Carlo); the uniform part of an error field is harmless and drops out."""
-    em, k = geo.em, geo.br*geo.a**3/(4*np.pi)
+    em, k = geo.em, geo.br*geo.vol/(4*np.pi)
     d = sensors[None, :, :] - pos[:, None, :]
     r2 = (d**2).sum(-1); ir3 = r2**-1.5; ir5 = ir3/r2; ir7 = ir5/r2
     mx, my = np.cos(rot)[:, None], np.sin(rot)[:, None]
@@ -119,7 +121,7 @@ def sensitivity(geo, zgrid, sensors):
     for l, r in enumerate(geo.radii):
         nref = geo.nmax(r)
         for j, z in enumerate(zgrid):
-            A[l, j] = ring_field(r, z, nref, 0.0, sensors, geo.a, geo.br)/nref
+            A[l, j] = ring_field(r, z, nref, 0.0, sensors, geo.a, geo.br, geo.h)/nref
     return A
 
 
@@ -247,13 +249,13 @@ class Design:
         return np.vstack(pos), np.concatenate(rot), np.concatenate(ring), np.concatenate(sgn)
 
     def field_exact(self, sensors):
-        return sum(ring_field(rg['r'], self.z(rg), rg['n'], rg['phase'], sensors, self.geo.a, self.geo.br)
+        return sum(ring_field(rg['r'], self.z(rg), rg['n'], rg['phase'], sensors, self.geo.a, self.geo.br, self.geo.h)
                    for rg in self.rings)
 
     def field_dipole(self, sensors, grad=False):
         """Point-dipole Bx and, with grad, its Jacobian wrt the variable vector (ns x nv)."""
         pos, rot, ring, sgn = self.magnets()
-        k = self.geo.br*self.geo.a**3/(4*np.pi)
+        k = self.geo.br*self.geo.vol/(4*np.pi)
         d = sensors[None, :, :] - pos[:, None, :]                       # (nm, ns, 3)
         r2 = (d**2).sum(-1); ir = 1/np.sqrt(r2); ir3 = ir**3; ir5 = ir3/r2; ir7 = ir5/r2
         mx, my = np.cos(rot)[:, None], np.sin(rot)[:, None]
@@ -327,7 +329,7 @@ class Design:
             r = rg['r']
             add(r - geo.rmin, [(nz+i, 1)])
             add(geo.rmax - r, [(nz+i, -1)])
-            c = geo.fitc/r
+            c = min(geo.fitc/r, 1 - 1e-12)
             add(2*np.pi/rg['n'] - 2*np.arcsin(c), [(nz+i, 2*geo.fitc/(r*r*np.sqrt(1-c*c)))])
             nxt = [j for j, q in enumerate(self.rings) if q['k'] == rg['k'] and q['r'] > r]
             if nxt:
@@ -338,7 +340,10 @@ class Design:
     def ledger(self):
         pos, rot, _, _ = self.magnets()
         rows = [[p[0], p[1], p[2], 0, 0, np.rad2deg(t), 0, 0, 0, 0, 0, self.geo.a, ''] for p, t in zip(pos, rot)]
-        return pd.DataFrame(rows, columns=COLS)
+        df = pd.DataFrame(rows, columns=COLS)
+        if self.geo.h != self.geo.a:
+            df['Magnet_height'] = self.geo.h                          # length along z; Magnet_length is the a x a face
+        return df
 
     def summary(self):
         out = []
@@ -352,7 +357,7 @@ class Design:
 def score(d, sensors):
     """Exact ppm (with --robust: expected as-built ppm, see robust_value), or inf if a constraint or B0 is violated."""
     B = d.field_exact(sensors)
-    if B.mean() < d.geo.min_b0 - 1e-6 or d.constraints().min() < -1e-6:
+    if B.mean() < d.geo.min_b0 - 1e-6 or not d.constraints().min() >= -1e-6:     # NaN (invalid ring fit) fails too
         return np.inf
     if d.geo.em:
         return robust_value(ppm(B), d.error_s2(sensors), B.mean(), d.geo)[0]
@@ -564,7 +569,8 @@ def main():
     ap.add_argument('--max-length', type=float, default=150)
     ap.add_argument('--bore', type=float, default=100)
     ap.add_argument('--max-od', type=float, default=200)
-    ap.add_argument('--cube', type=float, default=6.35)
+    ap.add_argument('--cube', type=float, default=6.35, help='magnet cross-section a (mm), a x a in the ring plane')
+    ap.add_argument('--height', type=float, help='magnet length along z (mm), default = --cube (cubes)')
     ap.add_argument('--br', type=float, default=1320)
     ap.add_argument('--cyl-d', type=float, default=40); ap.add_argument('--cyl-h', type=float, default=40)
     ap.add_argument('--sphere-d', type=float, help='target a sphere of this diameter instead of the cylinder')

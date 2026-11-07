@@ -1,0 +1,21 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 15.7 mm, z <= 68.65 mm
+[   2.5 s] continuous source (LP): 63.4 ppm at 45.1 mT with 350 magnets (per layer [133, 127, 90])
+[ 124.9 s] discrete placement (MILP, Time limit reached. (HiGHS Status 13: Time limit reached)): 96 ppm linearized, exact 92 ppm, B0 45.10 mT, 348 magnets, 5 slices
+z=  0.00: 12@r57.5, 14@r68.5, 14@r79.5
+z= 16.85: 14@r57.5, 19@r79.5
+z= 32.85: 17@r57.5
+z= 51.85: 33@r68.5
+z= 67.85: 32@r57.5, 39@r68.5
+[ 128.9 s] gradient descent (Adam): 92 ppm
+[ 130.2 s] minimax (SLSQP): 92 ppm
+[ 140.9 s]   ring 7: -1, ring 6: +1 -> 348 magnets, 40 ppm
+[ 148.0 s]   ring 7: -1, ring 6: +1 -> 348 magnets, 31 ppm
+[ 153.6 s]   ring 2: +1 -> 349 magnets, 28 ppm
+[ 159.5 s] magnet count moves: 28 ppm
+[ 159.5 s] done: 349 magnets, 28 ppm on the optimization points, B0 45.00 mT -> results/field_design/long/FDL_350.xlsx
+z=  0.00: 12@r60.5, 14@r71.5, 15@r82.5
+z= 15.70: 14@r60.1, 19@r71.1
+z= 32.30: 17@r57.9
+z= 52.95: 35@r67.3
+z= 68.65: 30@r57.5, 39@r68.5
+stage times: lp 3 s, milp 122 s, adam 4 s, slsqp 1 s, moves 29 s

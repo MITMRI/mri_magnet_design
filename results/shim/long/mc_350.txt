@@ -1,0 +1,3 @@
+design                          n vol cm3     B0  cyl ppm  sph ppm  MC typ  MC p90    len     OD
+FDL_350.xlsx                  349   178.7  45.00       30       28    4070    5397  150.0    180
+FDL_350_robust.xlsx           350   179.2  45.00      620      441    2772    3681  145.1    179

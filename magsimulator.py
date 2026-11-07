@@ -629,7 +629,7 @@ def simulate_ledger(mags,
         # print(df_ledger)
         # print(df_row)
 #**
-        cube = magpy.magnet.Cuboid(magnetization=mag_constant, dimension=(df_row['Magnet_length'],df_row['Magnet_length'],df_row['Magnet_length']))
+        cube = magpy.magnet.Cuboid(magnetization=mag_constant, dimension=ledger_dimension(df_row))
         # print(df_row)
         cube.position= (df_row['X-pos'],
                         df_row['Y-pos'],
@@ -938,11 +938,17 @@ def plot_3D_field(B_mT,Bcomponent=0,xmin=-100,xmax=100,ymin=-100,ymax=100,zmin=-
 # iHc (kA/m) of the grade series in magnet_properties/CY-Mag-NdFeB.pdf, with the max working temperature (C). N50/N52 are only 875 kA/m.
 NDFEB_IHC_GRADES = [('N', 955, 80), ('M', 1114, 100), ('H', 1353, 120), ('SH', 1592, 150), ('UH', 1989, 180), ('EH', 2387, 200), ('AH', 2787, 220)]
 
+# magnet dimension from a ledger row: a cube of Magnet_length, or a x a x Magnet_height (height along local z) if that column is set
+def ledger_dimension(df_row):
+    a = df_row['Magnet_length']
+    h = df_row.get('Magnet_height', np.nan)
+    return (a, a, a if pd.isna(h) else h)
+
 # builds a magpylib collection from a ledger, the same way simulate_ledger does (no demag meshing)
 def build_magnet_collection(ledger, mag_constant=[1270,0,0], extrinsicrot=True):
     col_magnet = magpy.Collection(style_label='magnets')
     for df_ledger, df_row in ledger.iterrows():
-        cube = magpy.magnet.Cuboid(magnetization=mag_constant, dimension=(df_row['Magnet_length'],df_row['Magnet_length'],df_row['Magnet_length']))
+        cube = magpy.magnet.Cuboid(magnetization=mag_constant, dimension=ledger_dimension(df_row))
         cube.position = (df_row['X-pos'], df_row['Y-pos'], df_row['Z-pos'])
         if(extrinsicrot==True):
             cube.orientation = R.from_euler('zyx', [df_row['Z-rot'],df_row['Y-rot'],df_row['X-rot']], degrees=True)

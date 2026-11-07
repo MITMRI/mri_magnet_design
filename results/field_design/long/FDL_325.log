@@ -1,0 +1,21 @@
+[   0.0 s] 213 check points, layer radii 57.49, 68.47, 79.45 mm (max [32, 39, 45] magnets/ring), slice pitch 15.7 mm, z <= 68.65 mm
+[   2.4 s] continuous source (LP): 79.0 ppm at 45.1 mT with 325 magnets (per layer [167, 94, 64])
+[ 124.7 s] discrete placement (MILP, Time limit reached. (HiGHS Status 13: Time limit reached)): 172 ppm linearized, exact 177 ppm, B0 45.10 mT, 324 magnets, 4 slices
+z=  9.85: 11@r57.5, 28@r68.5
+z= 29.85: 19@r57.5, 12@r68.5
+z= 51.85: 18@r57.5
+z= 67.85: 30@r57.5, 35@r68.5, 9@r79.5
+[ 127.9 s] gradient descent (Adam): 177 ppm
+[ 128.5 s] minimax (SLSQP): 177 ppm
+/Users/nv/Documents/MRI/magnet_design/field_design.py:333: RuntimeWarning: invalid value encountered in arcsin
+  add(2*np.pi/rg['n'] - 2*np.arcsin(c), [(nz+i, 2*geo.fitc/(r*r*np.sqrt(1-c*c)))])
+/Users/nv/Documents/MRI/magnet_design/field_design.py:333: RuntimeWarning: invalid value encountered in sqrt
+  add(2*np.pi/rg['n'] - 2*np.arcsin(c), [(nz+i, 2*geo.fitc/(r*r*np.sqrt(1-c*c)))])
+[ 135.3 s]   ring 7: -1, ring 3: +1 -> 324 magnets, 123 ppm
+[ 141.8 s] magnet count moves: 123 ppm
+[ 141.9 s] done: 324 magnets, 123 ppm on the optimization points, B0 45.00 mT -> results/field_design/long/FDL_325.xlsx
+z=  9.63: 11@r58.2, 28@r69.2
+z= 29.21: 19@r58.1, 13@r69.0
+z= 51.40: 18@r57.8
+z= 67.10: 30@r57.5, 35@r68.5, 8@r79.5
+stage times: lp 2 s, milp 122 s, adam 3 s, slsqp 1 s, moves 13 s

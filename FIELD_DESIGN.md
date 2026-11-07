@@ -170,6 +170,43 @@ only near room temperature; for margin use N42M (1,114 kA/m) or a higher-coerciv
 
 Figure: `figures/compare_magnets3D_views_robust.png` (previous BEST, `FD_gd`, `FD_robust`).
 
+## Long magnets (6.35 x 6.35 x 12.7 mm, `--height`)
+
+`--height` sets the magnet length along z (default: a cube). Each ring slice then takes 12.7 + 3 mm of length instead
+of 9.35 mm, so only 4-5 slices fit per side within 150 mm. Ledgers of non-cube designs carry a `Magnet_height` column,
+which `magsimulator` (and so `shim_design.py`, `check_demag.py`, ...) reads.
+
+```bash
+python field_design.py results/field_design/long/FDL_350.xlsx --height 12.7 --max-magnets 350            # ~2.5 min
+python field_design.py results/field_design/long/FDL_350_robust.xlsx --height 12.7 --max-magnets 350 --robust
+python shim_design.py results/field_design/long/FDL_350.xlsx results/shim/long/FDL_350_sim --simulate 3
+```
+
+All at B0 = 45.00 mT, 40 x 40 mm cylinder; as built = 300 random builds (Br 0.8%, 0.7 deg, +-0.25 mm), exact cuboid
+field (`results/shim/long/mc_350.txt` for the 350 designs):
+
+| Design | Magnets | Magnet volume | Ideal ppm, cylinder / 40 mm sphere | As built, typical / p90 | Length / OD (mm) |
+|---|---|---|---|---|---|
+| `FD_gd`, 1/4" cubes | 650 | 166 cm3 | 45 / 35 | 3,426 / 4,627 | 148 / 174 |
+| `FDL_325` (same volume) | 324 | 166 cm3 | 139 / 112 | 4,322 / 5,733 | 147 / 174 |
+| `FDL_350` | 349 | 179 cm3 | 30 / 28 | 4,070 / 5,397 | 150 / 180 |
+| `FDL_350_robust` | 350 | 179 cm3 | 620 / 441 | 2,772 / 3,681 | 145 / 179 |
+| `FDL_650` (650 allowed, 444 used) | 444 | 227 cm3 | 26 / 22 | 2,570 / 3,462 | 150 / 180 |
+
+Fewer, larger magnets average out fewer random errors (about sqrt(2) worse as built at equal volume), and fewer slices
+leave less freedom to flatten the field. Once shimmed the differences mostly disappear (`results/shim/long/*_sim.log`,
+60 x 1/8" cubes, 3 simulated builds each, ppm on the 40 x 40 mm cylinder):
+
+| Design | Unshimmed | Shimmed | Shimmed, with shim-cube errors (typical) |
+|---|---|---|---|
+| `FD_gd` | 3,471 / 4,289 / 4,008 | 329 / 328 / 621 | 679 / 634 / 808 |
+| `FDL_325` | 6,882 / 4,209 / 4,803 | 276 / 309 / 292 | 615 / 540 / 607 |
+| `FDL_350` | 5,391 / 5,249 / 3,171 | 274 / 304 / 384 | 600 / 614 / 703 |
+| `FDL_350_robust` | 2,929 / 2,003 / 2,315 | 396 / 356 / 356 | 682 / 617 / 592 |
+
+`FDL_325` needs iHc 1,022 kA/m (40 C, 1.2x): plain N42 (955) is not enough, an SH grade is. The other long designs
+have not had a demagnetization check yet. No holder CAD exists for the long designs.
+
 ## Notes and limits
 
 - The MILP treats each ring's field as proportional to its magnet count. That is exact for large rings, but small
