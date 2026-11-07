@@ -45,3 +45,14 @@ otherwise: 1200 sphere points (quarter used), ripple 2e-6, slice wall 3 mm, laye
   ~46 ppm, because above that point the inner ring layer can be mostly filled. Small changes to the ppm target near
   the step change B0 a lot.
 - Ideal magnets only. As built, magnet errors put real builds at thousands of ppm before shimming.
+
+## 3D views
+
+Made with `python plot_design_3d.py designs/12cm_bore200/placements.csv` (magpylib Collection + `magpy.show`, as in
+MRI4ALL's `magsimulator.plot_magnets3D`, with the true block size). Red = north side of each block.
+
+| Isometric | Cutaway (y > 0 half) |
+|---|---|
+| ![iso](magnets_iso.png) | ![cutaway](magnets_cutaway.png) |
+| **End (along the bore)** | **Side** |
+| ![end](magnets_end.png) | ![side](magnets_side.png) |
