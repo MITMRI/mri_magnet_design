@@ -7,28 +7,31 @@ Each block lies with its 25.4 mm length along z; its magnetization lies in the r
 different radius. The design is a list of slices, each a list of rings (radius, magnet count).
 
 Pipeline:
-  1. Sensitivity: exact Bx per magnet of a full ring, for every candidate (radius, z) on a grid.
-  2. MILP: pick rings and integer magnet counts that maximize B0 subject to |Bx - B0| <= eps*B0 on the
-     sphere surface (Bx is harmonic, so its extremes lie on the surface), rings in a slice not overlapping radially,
-     slices not overlapping axially.
+  1. Field table: exact Bx per magnet of a full ring at every candidate radius and z on a grid (all cores).
+  2. MILP (Gurobi, all cores): pick slices, rings and integer magnet counts that maximize B0 subject to
+     |Bx - B0| <= eps*B0 on the sphere surface (Bx is harmonic, so its extremes lie on the surface), rings in a
+     slice not overlapping radially, slices at least one block + wall apart, rings big enough that their ripple
+     is negligible (--ripple).
   3. Gradient refinement (SLSQP): move slice z and ring radii continuously, same objective and constraints.
      Gradient from a point-dipole model (3 dipoles per block); the exact-minus-dipole field is added as a
      correction, so constraint values are exact.
   4. Greedy +1 magnet per ring, re-refined, kept if B0 rises.
   5. Check on 20,000 points on the sphere surface.
 
-    python field_design_12cm.py results/12cm/bore180.xlsx --bore 180
+    python field_design_12cm.py out.xlsx --bore 200 --bore-wall 2 --od-wall 2 --ppm 50
+
+Needs a Gurobi license (free academic: gurobi.com).
 """
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import json
 import time
 
 import magpylib as magpy
 import numpy as np
 import pandas as pd
-from scipy.optimize import Bounds, LinearConstraint, milp, minimize
-from scipy.sparse import coo_matrix
+from scipy.optimize import minimize
 from scipy.spatial.transform import Rotation
 
 T0 = time.time()
@@ -58,14 +61,10 @@ class Geometry:
         self.rmax = a.max_od / 2 - a.od_wall - half_diag
         self.zmax = (a.max_length - a.h) / 2
         self.fit = half_diag + a.ring_wall / 2                        # n blocks fit at r if pi/n >= asin(fit/r)
-        self.rs, self.ripple = a.sphere_d / 2, a.ripple
+        self.rs = a.sphere_d / 2
 
     def nmax(self, r):
         return int(np.pi / np.arcsin(self.fit / r) + 1e-9)
-
-    def nmin(self, r):
-        """Fewest blocks in a ring at r: an n-block ring's field ripple on the sphere scales as (rs/r)^(n-1)."""
-        return int(np.ceil(1 + np.log(self.ripple) / np.log(self.rs / r)))
 
 
 def ring_positions(r, z, n):
@@ -86,10 +85,13 @@ def ring_field(geo, r, z, n, sensors):
 
 
 # --------------------------------------------------------------------------------------------------------------
-# MILP: x = [n (L*Z ints), y (L*Z ring used), s (Z slice used), b]
+# MILP (Gurobi): choose slices, rings and integer magnet counts
 
 def ring_table(geo, r, n, zs, sensors):
-    """Bx per magnet (mT) on the sensors of a ring of n blocks at radius r, for every z in zs: (len(zs), S)."""
+    """Exact Bx (mT) on the sensors of a full ring of n blocks at radius r (plus its mirror), for every z in zs:
+    (len(zs), S). Done in chunks of z to bound memory."""
+    if len(zs) > 8:
+        return np.vstack([ring_table(geo, r, n, zs[i:i + 8], sensors) for i in range(0, len(zs), 8)])
     pos, rot = zip(*[ring_positions(r, z, n) for z in zs])
     sizes = [len(p) for p in pos]
     pos, rot = np.vstack(pos), np.concatenate(rot)
@@ -97,61 +99,51 @@ def ring_table(geo, r, n, zs, sensors):
     B = magpy.getB('Cuboid', observers=np.tile(sensors, (nm, 1)), position=np.repeat(pos, ns, 0),
                    orientation=Rotation.from_euler('z', np.repeat(rot, ns)[:, None]), magnetization=(geo.br, 0, 0),
                    dimension=(geo.a, geo.a, geo.h))[:, 0].reshape(nm, ns)
-    return np.array([blk.sum(0) for blk in np.split(B, np.cumsum(sizes)[:-1])]) / n
+    return np.array([blk.sum(0) for blk in np.split(B, np.cumsum(sizes)[:-1])])
 
 
-def milp_design(geo, sensors, eps, dr_grid, dz, time_limit):
+def milp_design(geo, sensors, eps, dr_grid, dz, ripple, time_limit):
+    """Maximize B0 s.t. (1-eps) B0 <= Bx <= (1+eps) B0 on the sensors, with integer magnet counts per candidate ring
+    (radius and z on a grid). A ring's field is taken as n x its per-magnet field, which holds when the ring's
+    ripple, ~(R/r)^(n-1) for a sphere of radius R, is small: rings must have at least that many blocks."""
+    import gurobipy as gp
     radii = np.arange(geo.rmax, geo.rmin - 1e-9, -dr_grid)[::-1]        # grid anchored at the OD limit
-    radii = np.array([r for r in radii if geo.nmin(r) <= geo.nmax(r)])
     zs = np.concatenate([[0.0], np.arange(geo.pitch / 2, geo.zmax + 1e-9, dz)])
     L, Z, S = len(radii), len(zs), len(sensors)
     nmax = np.array([geo.nmax(r) for r in radii])
-    nmin = np.array([geo.nmin(r) for r in radii])
-    A = np.array([ring_table(geo, r, n, zs, sensors) for r, n in zip(radii, nmax)])     # (L, Z, S)
+    nmin = np.minimum(np.ceil(1 + np.log(ripple) / np.log(geo.rs / radii)), nmax + 1)
+    with ProcessPoolExecutor() as ex:                                   # one radius per core
+        A = np.array(list(ex.map(ring_table, [geo] * L, radii, nmax, [zs] * L, [sensors] * L))) / nmax[:, None, None]
     log(f'MILP: {L} radii ({radii[0]:.0f}-{radii[-1]:.0f} mm) x {Z} z positions, {S} check points')
 
-    N, Y, Sl, b = 0, L * Z, 2 * L * Z, 2 * L * Z + Z
-    nv = b + 1
-    q = lambda l, j: l * Z + j
-    ri, ci, vals, lo, hi = [], [], [], [], []                           # sparse constraint matrix
-
-    def add(entries, l_, h_):
-        for i, c in entries:
-            ri.append(len(lo)); ci.append(i); vals.append(c)
-        lo.append(l_); hi.append(h_)
-
-    M = A.reshape(L * Z, S).T
-    for k in range(S):                                                  # (1-eps) b <= B_k <= (1+eps) b
-        add(list(enumerate(M[k])) + [(b, -(1 + eps))], -np.inf, 0)
-        add(list(enumerate(M[k])) + [(b, -(1 - eps))], 0, np.inf)
-    for l in range(L):
+    m = gp.Model()
+    m.Params.OutputFlag, m.Params.TimeLimit, m.Params.MIPGap = 0, time_limit, 1e-3
+    n = m.addMVar((L, Z), vtype='I', ub=np.repeat(nmax[:, None], Z, 1))   # magnets in ring (radius l, z j)
+    y = m.addMVar((L, Z), vtype='B')                                    # ring present
+    s = m.addMVar(Z, vtype='B')                                         # slice used
+    b0 = m.addMVar(1)
+    B = A.reshape(L * Z, S).T @ n.reshape(-1)
+    m.addConstr(B <= (1 + eps) * b0)
+    m.addConstr(B >= (1 - eps) * b0)
+    m.addConstr(n <= nmax[:, None] * y)
+    m.addConstr(n >= nmin[:, None] * y)
+    for l in range(L):                               # rings in a slice: no radial overlap, only in a used slice
+        win = [k for k in range(l, L) if radii[k] < radii[l] + geo.dr]
         for j in range(Z):
-            add([(N + q(l, j), 1), (Y + q(l, j), -nmax[l])], -np.inf, 0)  # n <= nmax * y
-            add([(N + q(l, j), 1), (Y + q(l, j), -nmin[l])], 0, np.inf)   # n >= nmin * y (no ripple)
-            add([(Y + q(l, j), 1), (Sl + j, -1)], -np.inf, 0)             # ring only in a used slice
-        win = [m for m in range(l, L) if radii[m] < radii[l] + geo.dr]
-        for j in range(Z):                                              # rings in a slice do not overlap
-            if len(win) > 1:
-                add([(Y + q(m, j), 1) for m in win], -np.inf, 1)
-    for j in range(Z):                                                  # slices do not overlap
+            m.addConstr(y[win, j].sum() <= s[j])
+    for j in range(Z):                               # slices at least one pitch apart
         win = np.where((zs >= zs[j]) & (zs < zs[j] + geo.pitch))[0]
         if len(win) > 1:
-            add([(Sl + w, 1) for w in win], -np.inf, 1)
-
-    c = np.zeros(nv); c[b] = -1
-    res = milp(c, constraints=LinearConstraint(coo_matrix((vals, (ri, ci)), shape=(len(lo), nv)), lo, hi),
-               integrality=np.r_[np.ones(nv - 1), 0],
-               bounds=Bounds(0, np.r_[np.repeat(nmax, Z), np.ones(L * Z + Z), np.inf]),
-               options={'time_limit': time_limit, 'mip_rel_gap': 1e-3})
-    if res.x is None:
-        raise SystemExit(f'MILP found no solution: {res.message}')
-    n = np.round(res.x[:L * Z]).astype(int).reshape(L, Z)
-    rings = [dict(r=radii[l], z=zs[j], n=n[l, j]) for j in range(Z) for l in range(L) if n[l, j] > 0]
-    if not rings:
-        raise SystemExit(f'MILP returned no rings: {res.message}')
-    if res.mip_dual_bound is not None:
-        log(f'MILP upper bound {-res.mip_dual_bound:.1f} mT')
-    return rings, res.x[b], res.message
+            m.addConstr(s[win].sum() <= 1)
+    m.setObjective(b0.sum(), gp.GRB.MAXIMIZE)
+    m.optimize()
+    if m.SolCount == 0:
+        raise SystemExit(f'Gurobi found no solution (status {m.Status})')
+    msg = f'Gurobi status {m.Status}, gap {100 * m.MIPGap:.2f}%, {m.Runtime:.0f} s'
+    nn = np.round(n.X).astype(int)
+    rings = [dict(r=radii[l], z=zs[j], n=nn[l, j]) for l, j in zip(*np.nonzero(nn))]
+    log(f'MILP: {b0.X[0]:.1f} mT, upper bound {m.ObjBound:.1f} mT ({msg})')
+    return rings, b0.X[0], msg
 
 
 # --------------------------------------------------------------------------------------------------------------
@@ -231,8 +223,6 @@ class Design:
             add(r - geo.rmin, [(nz + i, 1)])
             add(geo.rmax - r, [(nz + i, -1)])
             add(np.pi / rg['n'] - np.arcsin(min(c, 1)), [(nz + i, c / r / np.sqrt(max(1 - c * c, 1e-12)))])
-            rlo = geo.rs / geo.ripple ** (1 / (rg['n'] - 1))              # ripple: n >= nmin(r) <=> r >= rlo
-            add(r - rlo, [(nz + i, 1)])
             if i + 1 < len(self.rings) and self.rings[i + 1]['k'] == rg['k']:   # rings in a slice do not overlap
                 add(self.rings[i + 1]['r'] - r - geo.dr, [(nz + i + 1, 1), (nz + i, -1)])
         return np.array(g), np.array(J)
@@ -349,11 +339,10 @@ def main():
     ap.add_argument('--slice-wall', type=float, default=3)
     ap.add_argument('--layer-wall', type=float, default=2)
     ap.add_argument('--ring-wall', type=float, default=1.5)
-    ap.add_argument('--milp-slack', type=float, default=1.0, help='MILP uses this fraction of the ppm budget')
     ap.add_argument('--dr-grid', type=float, default=10)
     ap.add_argument('--dz', type=float, default=4)
     ap.add_argument('--sensors', type=int, default=1200, help='points on the full sphere; one quarter is used')
-    ap.add_argument('--ripple', type=float, default=2e-6, help='max (R/r)^(n-1) per ring')
+    ap.add_argument('--ripple', type=float, default=2e-6, help='rings need (R/r)^(n-1) <= this')
     ap.add_argument('--milp-time', type=float, default=180)
     ap.add_argument('--time-limit', type=float, default=900)
     a = ap.parse_args()
@@ -364,7 +353,7 @@ def main():
     eps = (a.ppm - a.margin) * 1e-6 / 2
     log(f'r {geo.rmin:.1f}-{geo.rmax:.1f} mm, axial pitch {geo.pitch} mm, z <= {geo.zmax:.1f} mm')
 
-    rings, b_lin, msg = milp_design(geo, sensors, a.milp_slack * eps, a.dr_grid, a.dz, a.milp_time)
+    rings, b_lin, msg = milp_design(geo, sensors, eps, a.dr_grid, a.dz, a.ripple, a.milp_time)
     d = Design(geo, rings)
     B = d.field(sensors)
     log(f'MILP ({msg}): {b_lin:.1f} mT linear, exact {B.mean():.1f} mT / {ppm(B):.0f} ppm, {d.count()} magnets\n'

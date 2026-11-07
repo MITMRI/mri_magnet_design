@@ -41,15 +41,19 @@ With a 200 mm bore and 325 mm OD, ring centers span r = 111.0-151.5 mm, exactly 
 1. Field table: exact Bx per magnet of a full ring (magpylib cuboids) for every candidate radius and slice z on a
    grid, on check points covering a quarter of the sphere surface (Bx is mirror symmetric in y and z; it is harmonic,
    so its extremes over the ball lie on the surface).
-2. MILP (HiGHS): choose slices, rings and integer magnet counts that maximize B0 with |Bx - B0| <= eps*B0 on every
-   check point. `eps` holds back a margin (default 8 ppm, plus 10% more in the MILP for ring ripple).
+2. MILP (Gurobi, all cores): choose slices, rings and integer magnet counts that maximize B0 with
+   |Bx - B0| <= eps*B0 on every check point. `eps` holds back a margin below the ppm cap (`--margin`; the dense check
+   usually lands within ~1 ppm of the target, so 1-2 ppm is enough).
 3. Gradient refinement (SLSQP, +-2 mm trust region per step): move slice z and ring radii to raise B0 under the same
    constraints. Point-dipole Jacobian (3 dipoles per block), exact field via a correction term.
 4. Greedy +1 magnet per ring, re-refined, kept if B0 rises.
 5. Final check on 20,000 points on the full sphere surface.
 
-Run time ~2-17 min per design (the MILP dominates; HiGHS is single-threaded, so several grids are run in parallel and
-the best kept).
+Run time ~2-3 min per design on 12 cores with Gurobi (free academic license, `~/gurobi.lic`). The field tables are
+computed in parallel too.
+
+B0 vs the ppm cap is a staircase rather than a slope: whole ring layers become fillable at particular ppm values, so a
+few ppm near a step can change B0 by 50%. Sweep the cap when choosing specs.
 
 ## Designs
 
