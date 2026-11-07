@@ -1,0 +1,5 @@
+610 blocks; outer edge r 160.45 mm, inner edge r 102.00 mm, z span 343.2 mm
+  min gap same ring: 1.69 mm
+  min gap between slices: 3.00 mm
+  min gap rings in one slice: 17.01 mm
+no overlaps

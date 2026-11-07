@@ -1,0 +1,43 @@
+[   0.0 s] r 111.0-151.5 mm, axial pitch 28.4 mm, z <= 167.3 mm
+[   8.8 s] MILP: 5 radii (112-152 mm) x 53 z positions, 300 check points
+[ 118.1 s] MILP upper bound 53.5 mT
+[ 118.4 s] MILP (Optimization terminated successfully. (HiGHS Status 7: Optimal)): 53.5 mT linear, exact 53.5 mT / 41 ppm, 602 magnets
+  z = +- 14.20: 43 @ r 151.5
+  z = +- 44.20: 48 @ r 151.5
+  z = +- 74.20: 48 @ r 151.5
+  z = +-104.20: 42 @ r 141.5
+  z = +-137.20: 39 @ r 151.5
+  z = +-167.20: 35 @ r 111.5, 46 @ r 151.5
+[ 119.9 s]     SLSQP: B0 55.48 mT, 43.7 ppm, geometry +0.000, Optimization terminated successfully
+[ 122.2 s]     SLSQP: B0 55.61 mT, 44.3 ppm, geometry +0.000, Optimization terminated successfully
+[ 123.3 s]     SLSQP: B0 57.00 mT, 43.4 ppm, geometry -0.000, Optimization terminated successfully
+[ 124.5 s]     SLSQP: B0 57.66 mT, 41.7 ppm, geometry -0.000, Optimization terminated successfully
+[ 124.5 s]   +1 magnet: 604 magnets, B0 57.66 mT
+[ 126.6 s]     SLSQP: B0 57.83 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 129.2 s]     SLSQP: B0 57.89 mT, 41.7 ppm, geometry -0.000, Optimization terminated successfully
+[ 130.1 s]     SLSQP: B0 57.89 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 130.1 s]   +1 magnet: 606 magnets, B0 57.89 mT
+[ 133.7 s]     SLSQP: B0 58.00 mT, 42.3 ppm, geometry -0.000, Optimization terminated successfully
+[ 134.7 s]     SLSQP: B0 58.00 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 135.4 s]     SLSQP: B0 58.00 mT, 42.0 ppm, geometry +0.000, Optimization terminated successfully
+[ 135.4 s]   +1 magnet: 608 magnets, B0 58.00 mT
+[ 140.2 s]     SLSQP: B0 58.11 mT, 42.4 ppm, geometry -0.000, Optimization terminated successfully
+[ 140.9 s]     SLSQP: B0 58.11 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 145.0 s]     SLSQP: B0 58.11 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 145.0 s]   +1 magnet: 610 magnets, B0 58.11 mT
+[ 147.0 s]     SLSQP: B0 58.22 mT, 42.4 ppm, geometry -0.000, Optimization terminated successfully
+[ 147.8 s]     SLSQP: B0 58.22 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 148.8 s]     SLSQP: B0 58.22 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 151.1 s]     SLSQP: B0 58.30 mT, 42.5 ppm, geometry -0.000, Optimization terminated successfully
+[ 152.0 s]     SLSQP: B0 58.30 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 152.9 s]     SLSQP: B0 58.30 mT, 42.0 ppm, geometry +0.000, Optimization terminated successfully
+[ 154.4 s]     SLSQP: B0 58.23 mT, 55.5 ppm, geometry -0.000, Optimization terminated successfully
+[ 155.5 s]     SLSQP: B0 58.24 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 156.2 s]     SLSQP: B0 58.24 mT, 42.0 ppm, geometry -0.000, Optimization terminated successfully
+[ 169.4 s] done: B0 58.11 mT, 46.7 ppm (20k points), 610 magnets
+  z = +- 14.20: 43 @ r 147.6
+  z = +- 43.62: 48 @ r 148.8
+  z = +- 72.02: 48 @ r 148.8
+  z = +-100.42: 42 @ r 141.8
+  z = +-128.82: 42 @ r 151.5
+  z = +-158.88: 35 @ r 111.0, 47 @ r 145.7
