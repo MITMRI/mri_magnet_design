@@ -1,0 +1,4 @@
+build,target,continuous_ppm,continuous_cubes,cubes,unshimmed,perfect_cubes,real_median,real_p90,mass_g,cost
+0,100.0,100.0,19.0,22,1669.2,342.1,359.5,376.7,5.3,4.8
+1,100.0,100.0,27.4,29,3728.7,296.4,314.7,343.2,7.0,6.4
+2,100.0,100.0,42.9,45,4454.9,335.3,358.1,378.2,10.8,9.9

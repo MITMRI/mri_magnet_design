@@ -20,6 +20,8 @@ parallelized and chunked to stay at about 4 GB of RAM; `--jobs` sets the number 
 | `forces_12cm.py` | Force and torque on every block in the finished magnet; net load per ring and per slice; force between the two halves | `forces.csv` + stdout | ~45 s |
 | `assembly_12cm.py` | Force on each plate (and on each block) while stacking the plates in several orders, and while closing all plates together on long rods; rod length needed | `assembly_pairs.pkl` (cache) + stdout | ~4 min first run, seconds after |
 | `insertion_12cm.py` | Axial force on seated blocks while a neighbour is pushed into its pocket, and on the block being inserted | stdout | ~1 min |
+| `plot_slice_2d.py` | 2D cross-section of one plate (default: the one with the most blocks): block footprints, magnetization, bore, OD, DSV | `slice_z<z>.png` | seconds |
+| `shim_12cm.py` | Passive shim insert (a stack of printed rings in the bore holding 1/8" cubes): placement from a field map or simulated as-built builds, as-built ppm with the cubes' own errors, loads on the cubes and the stack | `shim_<cube>mm_<rings>rings/` | ~6 min for 3 builds |
 
 Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `assembly.txt`, `insertion.txt`
 (stdout redirected), and `designs/12cm_bore200_84mT/tolerance*.txt`.
@@ -36,5 +38,9 @@ Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `
 - `insertion_12cm.py`: pockets have a floor on the outward face (away from the midplane) and are open toward the
   midplane; plates are filled one at a time before stacking. "Pull-out" is force on a seated block toward its open
   face.
+- `shim_12cm.py`: continuous optimum (least magnet for a target ppm, Gurobi barrier) -> cubes by walking each ring ->
+  SLSQP refinement of every cube's ring angle and magnetization angle with exact fields. `--targets` sets the ppm
+  targets tried; the cube count follows from the physics, at most `--max-cubes`. "real" = the cubes' own Br/angle
+  errors (default +-3% / +-1.5 deg), one installation. `--parallel` builds run at once (~1.5-2 GB each).
 - `tolerance_12cm.py`: errors are uniform within +-tol; the field is linearized in the errors and checked against
   exact magpylib on a few trials (`--check`).

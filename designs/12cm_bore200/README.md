@@ -97,3 +97,37 @@ Swap the long rods for final-length ones one at a time instead of cutting them n
   the next plate's floor must fit in the 3.0 mm (midplane) / 4.6 / 6.6 mm gaps between slices. Use a light friction fit
   (>= ~15-20 N) or a temporary hold-down plate while filling. In the closed stack each open face sits against the
   next plate's floor.
+
+## Rod holes and cross-section
+
+`slice_z+166.2.png` (`utilities/plot_slice_2d.py`): the plate with the most blocks (z = +-166.2, 116 blocks on
+r = 111.5 / 131.5 / 151.5 mm). `rod_holes.png`: the design has no reserved rod holes; 30 spots clear an M5 rod (5.5 mm
+hole + 1.5 mm wall) through all 12 plates, e.g. 8 rods at (theta, r) = (+-5 deg, 140.0), (+-51.8, 137.6),
+(+-128.5, 105.6), (+-146.2, 138.8) mm, unevenly spaced. Re-running the optimizer with rod keep-outs is the cleaner fix.
+
+## Passive shim insert
+
+`utilities/shim_12cm.py`, results in `shim_3.175mm_12rings/`. A stack of printed rings slides into the bore (ring OD
+199.6 mm); each ring holds a few 1/8" N42 cubes (K&J B222, ~$0.22, 0.24 g) lying flat in pockets at any angle around
+the ring and any magnetization angle. Cube centres at r = 96.55 mm; clear bore inside the stack 186.6 mm.
+
+Simulated as-built builds (blocks +-3% Br, +-1.5 deg), shim cubes with their own +-3% / +-1.5 deg errors, one
+installation, peak-to-peak over the 120 mm DSV:
+
+| Build | Unshimmed | Target 100 ppm: cubes | As built (median / p90) |
+|---|---|---|---|
+| 0 | 1,669 | 22 | 359 / 377 |
+| 1 | 3,729 | 29 | 315 / 343 |
+| 2 | 4,455 | 45 | 358 / 378 |
+
+Other targets (build 0): 200 ppm -> 16 cubes, 384; 50 -> 28 cubes, 402; 25 -> 53 cubes, 290. Plan on ~20-50 cubes
+per shim (buy ~100). 1/4" cubes are too coarse this close to the DSV: one puts ~14,000 ppm on the nearest point and its
+own 3% error ~400 ppm; full rings of 1/4" cubes with designed angles reached ~1,000 ppm as built with 216 cubes.
+
+**Rings.** 12 ring planes were offered (z = +-13.6, +-40.9, +-68.2, +-95.5, +-122.7, +-150 mm, 27.27 mm apart); the
+cubes only ever landed on the 8 middle ones (|z| <= 95.5). Printed as a stack of 8 rings 27.27 mm tall, cube pockets
+at each ring's mid-height, the stack is 218 mm long. Each ring is reprinted per shim solution; the rings need keys
+so their rotation is fixed (a 1 deg ring rotation turns every cube in it).
+
+**Loads** (tiny): at most 0.67 N and 3.2 N mm on a cube, 0.1 N net on the whole stack, 1.6 N while sliding it in;
+reverse field on a cube at most 82 kA/m vs >= 955 kA/m coercivity. A friction fit or a dab of glue holds the cubes.
