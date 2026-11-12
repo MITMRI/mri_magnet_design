@@ -139,7 +139,7 @@ layout. Plan on ~20-55 cubes per shim (buy ~100). Cubes land only in rings 2-8 (
 
 Worst build (1), real cubes, one installation:
 
-![field on the DSV](shim_3.175mm/field_sphere_b1.png)
+![field on a cylinder in the DSV (85 mm dia x 85 mm, side unrolled at true size, end caps)](shim_3.175mm/field_cylinder_b1.png)
 ![central planes](shim_3.175mm/field_planes_b1.png)
 ![shim cubes](shim_3.175mm/shim_layout_b1.png)
 

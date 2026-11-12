@@ -21,7 +21,7 @@ parallelized and chunked to stay at about 4 GB of RAM; `--jobs` sets the number 
 | `assembly_12cm.py` | Force on each plate (and on each block) while stacking the plates in several orders, and while closing all plates together on long rods; rod length needed | `assembly_pairs.pkl` (cache) + stdout | ~4 min first run, seconds after |
 | `insertion_12cm.py` | Axial force on seated blocks while a neighbour is pushed into its pocket, and on the block being inserted | stdout | ~1 min |
 | `plot_slice_2d.py` | 2D cross-section of one plate (default: the one with the most blocks): block footprints, magnetization, bore, OD, DSV | `slice_z<z>.png` | seconds |
-| `plot_shim_12cm.py` | Pictures of a shim solution: Bx over the DSV surface and central planes before/after (real cubes), the cubes ring by ring | `field_sphere_b<i>.png`, `field_planes_b<i>.png`, `shim_layout_b<i>.png` | ~1 min |
+| `plot_shim_12cm.py` | Pictures of a shim solution: Bx on a cylinder inside the DSV (side unrolled, end caps) and central planes before/after (real cubes), the cubes ring by ring | `field_cylinder_b<i>.png`, `field_planes_b<i>.png`, `shim_layout_b<i>.png` | ~1 min |
 | `shim_12cm.py` | Passive shim insert (a stack of printed rings in the bore holding 1/8" cubes): placement from a field map or simulated as-built builds, as-built ppm with the cubes' own errors, loads on the cubes and the stack | `shim_<cube>mm/` | ~6 min for 3 builds |
 
 Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `assembly.txt`, `insertion.txt`
