@@ -6,8 +6,8 @@ magnetization in the ring plane at any angle, at any angle around the ring. The 
 cover. Same pipeline as the main array (field_design_12cm.py):
 continuous optimum -> discrete magnets -> refinement.
 
-1. As-built builds: every block of the design gets its own remanence error (uniform within +-br_tol) and
-   magnetization tilt (uniform on the cap within ang_tol, random azimuth); exact cuboid fields of all blocks, B0 along
+1. As-built builds: every block of the design gets its own remanence error (uniform within +-br_tol),
+   magnetization tilt (uniform on the cap within ang_tol, random azimuth) and position error (+-pos_tol per axis); exact cuboid fields of all blocks, B0 along
    x. Homogeneity = peak-to-peak Bx over points on the DSV surface / mean. (With a measured map this step is replaced
    by the map.)
 2. Continuous optimum (Gurobi barrier): magnetization density on every ring plane, `grid` angular positions x 8
@@ -19,8 +19,7 @@ continuous optimum -> discrete magnets -> refinement.
 4. Refinement: SLSQP minimax over every cube's angle around its ring and its magnetization angle, exact cuboid fields
    (finite-difference Jacobian), neighbours on a ring kept apart so any rotation fits; best offset on a denser check
    point set.
-5. Shim-cube errors: the cubes' own Br and angle tolerances, propagated exactly (field linear in magnetization) over
-   random draws: the as-built result of one installation.
+5. Shim-cube errors: the cubes' own Br, angle and position tolerances, exact fields over random draws: the as-built result of one installation.
 6. Loads on the best layout (pole-face surface-charge integral, as forces_12cm.py): force and torque on every cube in
    the field of the as-built blocks plus the other cubes; net force and torque per ring and on the whole stack (what
    the bolts carry); axial force while the stack slides in from +z; reverse field on each cube.
@@ -102,8 +101,9 @@ def random_magnetization(n, br, br_tol, ang_tol, rng):
     return br * (1 + u)[:, None] * np.c_[ca, sa * np.cos(b), sa * np.sin(b)]
 
 
-def as_built(csv, br, br_tol, ang_tol, P_list, seed, builds):
-    """Exact Bx (mT) of `builds` random as-built versions of the design on each point set in P_list."""
+def as_built(csv, br, br_tol, ang_tol, pos_tol, P_list, seed, builds):
+    """Exact Bx (mT) of `builds` random as-built versions of the design on each point set in P_list (Br, angle and
+    position errors; position uniform within +-pos_tol mm on each axis)."""
     df = pd.read_csv(csv)
     pos = df[['x', 'y', 'z']].to_numpy()
     quat = R.from_euler('z', df.rot_z_deg.to_numpy()[:, None], degrees=True).as_quat()
@@ -111,7 +111,8 @@ def as_built(csv, br, br_tol, ang_tol, P_list, seed, builds):
     out = []
     for _ in range(builds):
         mag = random_magnetization(len(df), br, br_tol / 100, ang_tol, rng)
-        out.append(([cuboid_B(pos, quat, mag, BLOCK, P)[:, 0] for P in P_list], mag))
+        p = pos + rng.uniform(-pos_tol, pos_tol, pos.shape)
+        out.append(([cuboid_B(p, quat, mag, BLOCK, P)[:, 0] for P in P_list], mag, p))
     return df, pos, quat, out
 
 
@@ -282,7 +283,7 @@ def run_build(job):
     for target in a.targets:
         lp, used, (ring, phi, psi, after) = design_density(st, dens, Bopt, Popt, Bchk, Pchk, target, a.max_cubes,
                                                           a.starts, a.iters, log)
-        med, p90 = cube_error_spread(st, ring, phi, psi, Bchk, Pchk, a.shim_br_tol, a.shim_ang_tol,
+        med, p90 = cube_error_spread(st, ring, phi, psi, Bchk, Pchk, a.shim_br_tol, a.shim_ang_tol, a.shim_pos_tol,
                                      a.error_draws, rng) if len(phi) else (ppm(Bchk), ppm(Bchk))
         rows.append(dict(build=b, target=target, continuous_ppm=lp, continuous_cubes=used, cubes=len(phi),
                          unshimmed=ppm(Bchk), perfect_cubes=ppm(after), real_median=med, real_p90=p90,
@@ -294,15 +295,19 @@ def run_build(job):
     return rows, best, lines
 
 
-def cube_error_spread(st, ring, phi, psi, Bbase, P, br_tol, ang_tol, draws, rng):
-    """median / p90 ppm when every shim cube has its own Br and angle error (field linear in its magnetization)"""
+def cube_error_spread(st, ring, phi, psi, Bbase, P, br_tol, ang_tol, pos_tol, draws, rng):
+    """median / p90 ppm when every shim cube has its own Br, angle and position error (position uniform within
+    +-pos_tol mm on each axis), exact fields per draw"""
     spos, quat = st.pos(ring, phi), R.from_euler('z', psi[:, None]).as_quat()
-    G = np.stack([magpy.getB('Cuboid', observers=np.tile(P, (len(spos), 1)), position=np.repeat(spos, len(P), 0),
-                             orientation=R.from_quat(np.repeat(quat, len(P), 0)),
-                             magnetization=np.eye(3)[ax] * st.br, dimension=(st.a,) * 3)[:, 0]
-                  .reshape(len(spos), len(P)) for ax in range(3)], 1)          # (n, 3, points)
-    e = [ppm(Bbase + np.einsum('na,nap->p', random_magnetization(len(spos), 1.0, br_tol / 100, ang_tol, rng), G))
-         for _ in range(draws)]
+    n, m = len(spos), len(P)
+    ori = R.from_quat(np.repeat(quat, m, 0))
+    e = []
+    for _ in range(draws):
+        p = spos + rng.uniform(-pos_tol, pos_tol, spos.shape)
+        mag = random_magnetization(n, st.br, br_tol / 100, ang_tol, rng)
+        B = magpy.getB('Cuboid', observers=np.tile(P, (n, 1)), position=np.repeat(p, m, 0), orientation=ori,
+                       magnetization=np.repeat(mag, m, 0), dimension=(st.a,) * 3)[:, 0].reshape(n, m)
+        e.append(ppm(Bbase + B.sum(0)))
     return np.median(e), np.percentile(e, 90)
 
 
@@ -426,6 +431,7 @@ def main():
     ap.add_argument('--br', type=float, default=1300, help='main block remanence, mT')
     ap.add_argument('--br-tol', type=float, default=3.0, help='+-%% remanence error of the main blocks')
     ap.add_argument('--ang-tol', type=float, default=1.5, help='+-deg magnetization angle error of the main blocks')
+    ap.add_argument('--pos-tol', type=float, default=0.1, help='+-mm position error of the main blocks (each axis)')
     ap.add_argument('--dsv', type=float, default=120)
     ap.add_argument('--opt-points', type=int, default=500)
     ap.add_argument('--check-points', type=int, default=2000)
@@ -433,6 +439,7 @@ def main():
     ap.add_argument('--shim-br', type=float, default=1300, help='shim cube remanence, mT (N42)')
     ap.add_argument('--shim-br-tol', type=float, default=3.0, help='+-%%, shim cubes')
     ap.add_argument('--shim-ang-tol', type=float, default=1.5, help='+-deg, shim cubes')
+    ap.add_argument('--shim-pos-tol', type=float, default=0.1, help='+-mm position error, shim cubes (each axis)')
     ap.add_argument('--price', type=float, default=0.22, help='$ per shim cube (B222)')
     ap.add_argument('--mass', type=float, default=0.24, help='g per shim cube (B222)')
     ap.add_argument('--top-gap', type=float, default=0.3, help='cube top below the ring top face, mm')
@@ -474,23 +481,24 @@ def main():
         df = pd.read_csv(a.csv)
         bpos = df[['x', 'y', 'z']].to_numpy()
         bquat = R.from_euler('z', df.rot_z_deg.to_numpy()[:, None], degrees=True).as_quat()
-        builds = [((Bmap[sub], Bmap), np.tile([a.br, 0, 0], (len(df), 1)))]   # loads use nominal blocks
+        builds = [((Bmap[sub], Bmap), np.tile([a.br, 0, 0], (len(df), 1)), bpos)]   # loads use nominal blocks
         rad = np.linalg.norm(Pchk - Pchk.mean(0), axis=1)
         log(f'{a.map}: {len(Pchk)} measured points (radius {rad.min():.1f}-{rad.max():.1f} mm about '
             f'{np.round(Pchk.mean(0), 1).tolist()}), optimizing on {len(Popt)}; B0 {Bmap.mean():.3f} mT')
     else:
         Popt, Pchk = sphere_points(a.opt_points, a.dsv / 2), sphere_points(a.check_points, a.dsv / 2)
-        df, bpos, bquat, builds = as_built(a.csv, a.br, a.br_tol, a.ang_tol, [Popt, Pchk], a.seed, a.builds)
-        log(f'{a.csv}: {len(df)} blocks; block errors Br +-{a.br_tol}%, angle +-{a.ang_tol} deg (uniform)')
+        df, bpos, bquat, builds = as_built(a.csv, a.br, a.br_tol, a.ang_tol, a.pos_tol, [Popt, Pchk], a.seed, a.builds)
+        log(f'{a.csv}: {len(df)} blocks; block errors Br +-{a.br_tol}%, angle +-{a.ang_tol} deg, '
+            f'position +-{a.pos_tol} mm (uniform)')
     log(f'shim stack: {len(st.z)} ring planes at z = {", ".join(f"{z:.0f}" for z in st.z)} mm; ring OD {st.od:.1f}, '
         f'cube centres at r {st.r:.2f}, clear bore {st.clear:.1f} mm; {a.cube} mm cubes lying flat '
-        f'(Br {a.shim_br:.0f} mT, errors +-{a.shim_br_tol}% / +-{a.shim_ang_tol} deg), at most {st.per_ring} per ring, '
+        f'(Br {a.shim_br:.0f} mT, errors +-{a.shim_br_tol}% / +-{a.shim_ang_tol} deg / +-{a.shim_pos_tol} mm), at most {st.per_ring} per ring, '
         f'{a.max_cubes} in total')
-    for b, ((Bopt, Bchk), bmag) in enumerate(builds):
+    for b, ((Bopt, Bchk), bmag, bp) in enumerate(builds):
         log(f'build {b}: unshimmed {ppm(Bchk):.0f} ppm, B0 {Bchk.mean():.2f} mT')
         if not a.map:
-            np.savez(os.path.join(out, f'b{b}_build.npz'), bmag=bmag)            # the build's block magnetizations
-    jobs = [(a, b, Bopt, Bchk, st, Popt, Pchk) for b, ((Bopt, Bchk), _) in enumerate(builds)]
+            np.savez(os.path.join(out, f'b{b}_build.npz'), bmag=bmag, bpos=bp)   # the build's block magnetizations, positions
+    jobs = [(a, b, Bopt, Bchk, st, Popt, Pchk) for b, ((Bopt, Bchk), _, _) in enumerate(builds)]
     with ProcessPoolExecutor(min(a.parallel, len(jobs))) as ex:
         results = list(ex.map(run_build, jobs))
     rows = [r for res_, _, _ in results for r in res_]
@@ -500,7 +508,7 @@ def main():
         pd.DataFrame(dict(ring=best[1], z=st.z[best[1]], phi_deg=np.degrees(best[2]), psi_deg=np.degrees(best[3]))
                      ).round(3).to_csv(os.path.join(out, f'b{b}_layout.csv'), index=False)
         if not a.no_loads:
-            loads(st, best[1], best[2], best[3], bpos, bquat, builds[b][1], df.z.max(), a.jobs, out, b, log)
+            loads(st, best[1], best[2], best[3], builds[b][2], bquat, builds[b][1], df.z.max(), a.jobs, out, b, log)
     rt = pd.DataFrame(dict(ring=np.arange(len(st.z)), z_bottom=bounds[:-1], z_top=bounds[1:],
                            height=np.diff(bounds), cube_plane_z=st.z))
     for b, (_, best, _) in enumerate(results):

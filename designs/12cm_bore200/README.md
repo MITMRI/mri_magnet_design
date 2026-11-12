@@ -121,30 +121,33 @@ reprinted for each shim solution.
 walking each ring -> SLSQP refinement of every cube's ring angle and magnetization angle with exact fields. The cube
 count follows from the field, not set in advance.
 
-Simulated as-built builds (blocks +-3% Br, +-1.5 deg); shim cubes with their own +-3% / +-1.5 deg errors, one
-installation; peak-to-peak Bx over the 120 mm DSV:
+Simulated as-built builds (blocks +-3% Br, +-1.5 deg, +-0.1 mm position on each axis); shim cubes with their own
++-3% / +-1.5 deg / +-0.1 mm errors, one installation (median / p90 over 300 random installations); peak-to-peak Bx
+over the 120 mm DSV:
 
 | Build | Unshimmed | Target 100 ppm: cubes, as built (median / p90) | Target 50 ppm: cubes, as built |
 |---|---|---|---|
-| 0 | 1,669 | 22, 354 / 375 | 28, **315 / 345** |
-| 1 | 3,729 | 30, **312 / 341** | 33, 333 / 359 |
-| 2 | 4,455 | 45, 357 / 378 | 51, **248 / 269** |
+| 0 | 1,751 | 21, 375 / 397 | 30, **344 / 366** |
+| 1 | 4,451 | 45, 306 / 329 | 53, **275 / 294** |
+| 2 | 2,667 | 32, 411 / 427 | 37, **320 / 340** |
 
-Plan on ~20-50 cubes per shim (buy ~100). Cubes land only in rings 2-8 (z -121 to +91 mm); rings 0, 1 and 9-11 stay
-empty. 1/4" cubes are coarse this close to the DSV: one puts ~14,000 ppm on the nearest point and its own 3% error
-~400 ppm, against 1/8 of both for a 1/8" cube.
+The cubes' own errors (including 0.1 mm of position) add only ~15-25 ppm over perfect cubes. Use the 50 ppm target
+layout. Plan on ~20-55 cubes per shim (buy ~100). Cubes land only in rings 2-8 (z -121 to +91 mm); rings 0, 1 and
+9-11 stay empty. 1/4" cubes do not work here: one puts ~14,000 ppm on the nearest DSV point and its own 3% error
+~400 ppm; tested on the same builds they never got below ~1,600 ppm (few cubes made the field worse, ~80 cubes reached
+~3,000 ppm).
 
-Worst build (2), real cubes, one installation:
+Worst build (1), real cubes, one installation:
 
-![field on the DSV](shim_3.175mm/field_sphere_b2.png)
-![central planes](shim_3.175mm/field_planes_b2.png)
-![shim cubes](shim_3.175mm/shim_layout_b2.png)
+![field on the DSV](shim_3.175mm/field_sphere_b1.png)
+![central planes](shim_3.175mm/field_planes_b1.png)
+![shim cubes](shim_3.175mm/shim_layout_b1.png)
 
 **From a measured map** (`--map`, x, y, z mm and Bx mT, e.g. points on the 120 mm sphere surface; Bx is harmonic, so
 its extremes are on the surface). Tested with a simulated build sampled at 300 surface points with 1 uT noise:
 3,612 -> 217 ppm on the map points; the true field after shimming was 313 ppm over 2,000 surface points and 268 ppm
 inside the sphere (median of real-cube draws). Map ~500-1,000 surface points so the map does not flatter the result.
 
-**Loads** (tiny): at most 0.70 N and 3.8 N mm on a cube; 0.26 N net on the whole stack (what the bolts carry); 2.7 N
-while sliding it in; reverse field on a cube at most 76 kA/m vs >= 955 kA/m coercivity. A friction fit or a dab of
+**Loads** (tiny): at most 0.74 N and 4.3 N mm on a cube; 0.26 N net on the whole stack (what the bolts carry); 2.2 N
+while sliding it in; reverse field on a cube at most 87 kA/m vs >= 955 kA/m coercivity. A friction fit or a dab of
 glue holds the cubes.

@@ -42,7 +42,7 @@ Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `
 - `shim_12cm.py`: continuous optimum (least magnet for a target ppm, Gurobi barrier) -> cubes by walking each ring ->
   SLSQP refinement of every cube's ring angle and magnetization angle with exact fields. `--targets` sets the ppm
   targets tried; the cube count follows from the physics, at most `--max-cubes`. "real" = the cubes' own Br/angle
-  errors (default +-3% / +-1.5 deg), one installation. `--parallel` builds run at once (~1.5-2 GB each).
+  errors (default +-3% / +-1.5 deg / +-0.1 mm), one installation; the main blocks get +-0.1 mm too (`--pos-tol`). `--parallel` builds run at once (~1.5-2 GB each).
   One shim ring per main plate (boundaries halfway between plates), cubes at each ring's +z face.
   `--map map.csv` (x, y, z mm, Bx mT): shim a measured map instead of simulated builds; a few hundred to 1,000 points
   on the DSV surface are enough (Bx is harmonic, so its extremes are on the surface).

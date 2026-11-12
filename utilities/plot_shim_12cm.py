@@ -5,7 +5,7 @@ and the shim cubes ring by ring.
     python utilities/plot_shim_12cm.py designs/12cm_bore200/placements.csv designs/12cm_bore200/shim_3.175mm
         [--build N]   (default: the build with the worst unshimmed field)
 
-"After" uses one draw of real shim cubes (their own Br and angle errors, as in shim_12cm.py), not ideal cubes.
+"After" uses one draw of real shim cubes (their own Br, angle and position errors, as in shim_12cm.py), not ideal cubes.
 Writes field_sphere_b<N>.png, field_planes_b<N>.png and shim_layout_b<N>.png into the shim folder.
 """
 import argparse
@@ -40,6 +40,7 @@ def main():
     ap.add_argument('--shim-br', type=float, default=1300)
     ap.add_argument('--shim-br-tol', type=float, default=3.0)
     ap.add_argument('--shim-ang-tol', type=float, default=1.5)
+    ap.add_argument('--shim-pos-tol', type=float, default=0.1)
     ap.add_argument('--bore', type=float, default=200)
     ap.add_argument('--seed', type=int, default=7)
     a = ap.parse_args()
@@ -49,7 +50,10 @@ def main():
     df = pd.read_csv(a.csv)
     bpos = df[['x', 'y', 'z']].to_numpy()
     bquat = R.from_euler('z', df.rot_z_deg.to_numpy()[:, None], degrees=True).as_quat()
-    bmag = np.load(os.path.join(a.shim_dir, f'b{b}_build.npz'))['bmag']
+    npz = np.load(os.path.join(a.shim_dir, f'b{b}_build.npz'))
+    bmag = npz['bmag']
+    if 'bpos' in npz:
+        bpos = npz['bpos']                                  # as-built block positions
     lay = pd.read_csv(os.path.join(a.shim_dir, f'b{b}_layout.csv'))
     rings = pd.read_csv(os.path.join(a.shim_dir, 'rings.csv')) if os.path.exists(
         os.path.join(a.shim_dir, 'rings.csv')) else None
@@ -57,8 +61,9 @@ def main():
     phi, psi = np.deg2rad(lay.phi_deg.to_numpy()), np.deg2rad(lay.psi_deg.to_numpy())
     spos = np.c_[r * np.cos(phi), r * np.sin(phi), lay.z.to_numpy()]
     squat = R.from_euler('z', psi[:, None]).as_quat()
-    smag = S.random_magnetization(len(lay), a.shim_br, a.shim_br_tol / 100, a.shim_ang_tol,
-                                  np.random.default_rng(a.seed))
+    rng = np.random.default_rng(a.seed)
+    smag = S.random_magnetization(len(lay), a.shim_br, a.shim_br_tol / 100, a.shim_ang_tol, rng)
+    spos = spos + rng.uniform(-a.shim_pos_tol, a.shim_pos_tol, spos.shape)
 
     def fields(P):
         before = S.cuboid_B(bpos, bquat, bmag, S.BLOCK, P)[:, 0]
@@ -85,7 +90,7 @@ def main():
         ax.set_ylabel('latitude (deg; +90 = +z)', fontsize=9, color=MUTED)
         ax.set_aspect('equal')
         fig.colorbar(im, ax=ax, shrink=0.8, label='ppm from the mean')
-    fig.suptitle(f'Bx over the {a.dsv:g} mm DSV surface, build {b} (blocks +-3% Br, +-1.5 deg), {len(lay)} shim cubes '
+    fig.suptitle(f'Bx over the {a.dsv:g} mm DSV surface, build {b} (blocks +-3% Br, +-1.5 deg, +-0.1 mm), {len(lay)} shim cubes '
                  f'(real cubes, one installation)', fontsize=12, color=INK)
     f1 = os.path.join(a.shim_dir, f'field_sphere_b{b}.png')
     fig.savefig(f1, facecolor='white'); plt.close(fig)
