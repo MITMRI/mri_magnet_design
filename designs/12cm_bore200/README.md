@@ -107,44 +107,44 @@ hole + 1.5 mm wall) through all 12 plates, e.g. 8 rods at (theta, r) = (+-5 deg,
 
 ## Passive shim insert
 
-`utilities/shim_12cm.py`, results in `shim_3.175mm_12rings/`. A stack of printed rings slides into the bore (ring OD
-199.6 mm); each ring holds a few 1/8" N42 cubes (K&J B222, ~$0.22, 0.24 g) lying flat in pockets at any angle around
-the ring and any magnetization angle. Cube centres at r = 96.55 mm; clear bore inside the stack 186.6 mm.
+`utilities/shim_12cm.py` (placement), `utilities/plot_shim_12cm.py` (pictures); results in `shim_3.175mm/`.
 
-Simulated as-built builds (blocks +-3% Br, +-1.5 deg), shim cubes with their own +-3% / +-1.5 deg errors, one
-installation, peak-to-peak over the 120 mm DSV:
+A stack of printed rings slides into the bore, **one ring per main plate**: boundaries halfway between neighbouring
+plates, the end rings out to the magnet ends (+-178.9 mm), so ring heights are 27.7-31 mm (`rings.csv`). Each ring
+holds a few 1/8" N42 cubes (K&J B222, ~$0.22, 0.24 g) lying flat in pockets open at its +z (top) face, cube centre
+1.9 mm below it, closed by the next ring; any angle around the ring, any magnetization angle in the ring plane. Ring
+OD 199.6 mm, cube centres at r = 96.55 mm, **ring ID (clear bore) 186.6 mm**, >= 1 mm of resin between cubes at any
+rotation. The rings need keys so their rotation is fixed (a 1 deg ring rotation turns every cube in it), and are
+reprinted for each shim solution.
 
-| Build | Unshimmed | Target 100 ppm: cubes | As built (median / p90) |
+**Method** (as the main array): continuous optimum (least magnet that reaches a target ppm, Gurobi) -> cubes by
+walking each ring -> SLSQP refinement of every cube's ring angle and magnetization angle with exact fields. The cube
+count follows from the field, not set in advance.
+
+Simulated as-built builds (blocks +-3% Br, +-1.5 deg); shim cubes with their own +-3% / +-1.5 deg errors, one
+installation; peak-to-peak Bx over the 120 mm DSV:
+
+| Build | Unshimmed | Target 100 ppm: cubes, as built (median / p90) | Target 50 ppm: cubes, as built |
 |---|---|---|---|
-| 0 | 1,669 | 22 | 359 / 377 |
-| 1 | 3,729 | 29 | 315 / 343 |
-| 2 | 4,455 | 45 | 358 / 378 |
+| 0 | 1,669 | 22, 354 / 375 | 28, **315 / 345** |
+| 1 | 3,729 | 30, **312 / 341** | 33, 333 / 359 |
+| 2 | 4,455 | 45, 357 / 378 | 51, **248 / 269** |
 
-Other targets (build 0): 200 ppm -> 16 cubes, 384; 50 -> 28 cubes, 402; 25 -> 53 cubes, 290. Plan on ~20-50 cubes
-per shim (buy ~100). 1/4" cubes are too coarse this close to the DSV: one puts ~14,000 ppm on the nearest point and its
-own 3% error ~400 ppm; full rings of 1/4" cubes with designed angles reached ~1,000 ppm as built with 216 cubes.
+Plan on ~20-50 cubes per shim (buy ~100). Cubes land only in rings 2-8 (z -121 to +91 mm); rings 0, 1 and 9-11 stay
+empty. 1/4" cubes are coarse this close to the DSV: one puts ~14,000 ppm on the nearest point and its own 3% error
+~400 ppm, against 1/8 of both for a 1/8" cube.
 
-**Rings matched to the main plates** (`--match-plates`, results in `shim_3.175mm_plates/`): one shim ring per main
-plate, boundaries halfway between plates (ends at the magnet ends, +-178.9 mm), so heights are 27.7-31 mm; cubes at
-each ring's +z face (cube centre 1.9 mm below it, pocket open to the top and closed by the next ring). Ring OD
-199.6 mm, ID 186.6 mm. As built (median / p90): build 0 315 / 345 (28 cubes), build 1 312 / 341 (30), build 2
-248 / 269 (51). Cubes land only in rings 2-8 (z -121 to +91 mm); see `rings.csv` for heights and cubes per ring.
+Worst build (2), real cubes, one installation:
 
-Worst build (2, 4,455 ppm unshimmed), real cubes, one installation:
+![field on the DSV](shim_3.175mm/field_sphere_b2.png)
+![central planes](shim_3.175mm/field_planes_b2.png)
+![shim cubes](shim_3.175mm/shim_layout_b2.png)
 
-![field on the DSV](shim_3.175mm_plates/field_sphere_b2.png)
-![central planes](shim_3.175mm_plates/field_planes_b2.png)
-![shim cubes](shim_3.175mm_plates/shim_layout_b2.png)
+**From a measured map** (`--map`, x, y, z mm and Bx mT, e.g. points on the 120 mm sphere surface; Bx is harmonic, so
+its extremes are on the surface). Tested with a simulated build sampled at 300 surface points with 1 uT noise:
+3,612 -> 217 ppm on the map points; the true field after shimming was 313 ppm over 2,000 surface points and 268 ppm
+inside the sphere (median of real-cube draws). Map ~500-1,000 surface points so the map does not flatter the result.
 
-**From a measured map.** Tested with a simulated build sampled at 300 points on the 120 mm sphere surface (1 uT
-noise), `--map`: 3,612 ppm -> 217 ppm on the map points; the true field after shimming was 313 ppm (median of real
-cube draws) over 2,000 surface points and 268 ppm inside the sphere. Map at least ~500-1,000 surface points so the map
-does not flatter the result.
-
-**Rings (first study).** 12 ring planes were offered (z = +-13.6, +-40.9, +-68.2, +-95.5, +-122.7, +-150 mm, 27.27 mm apart); the
-cubes only ever landed on the 8 middle ones (|z| <= 95.5). Printed as a stack of 8 rings 27.27 mm tall, cube pockets
-at each ring's mid-height, the stack is 218 mm long. Each ring is reprinted per shim solution; the rings need keys
-so their rotation is fixed (a 1 deg ring rotation turns every cube in it).
-
-**Loads** (tiny): at most 0.67 N and 3.2 N mm on a cube, 0.1 N net on the whole stack, 1.6 N while sliding it in;
-reverse field on a cube at most 82 kA/m vs >= 955 kA/m coercivity. A friction fit or a dab of glue holds the cubes.
+**Loads** (tiny): at most 0.70 N and 3.8 N mm on a cube; 0.26 N net on the whole stack (what the bolts carry); 2.7 N
+while sliding it in; reverse field on a cube at most 76 kA/m vs >= 955 kA/m coercivity. A friction fit or a dab of
+glue holds the cubes.

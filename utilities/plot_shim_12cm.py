@@ -2,7 +2,7 @@
 Pictures of a shim solution from shim_12cm.py: the field over the DSV before and after shimming, the central planes,
 and the shim cubes ring by ring.
 
-    python utilities/plot_shim_12cm.py designs/12cm_bore200/placements.csv designs/12cm_bore200/shim_3.175mm_plates
+    python utilities/plot_shim_12cm.py designs/12cm_bore200/placements.csv designs/12cm_bore200/shim_3.175mm
         [--build N]   (default: the build with the worst unshimmed field)
 
 "After" uses one draw of real shim cubes (their own Br and angle errors, as in shim_12cm.py), not ideal cubes.
@@ -124,12 +124,9 @@ def main():
     cols = 6
     fig = plt.figure(figsize=(3.0 * cols, 3.2 * int(np.ceil(n / cols)) + 4.2), dpi=140)
     gs = fig.add_gridspec(int(np.ceil(n / cols)) + 1, cols, height_ratios=[1] * int(np.ceil(n / cols)) + [1.35])
-    half = a.cube / 2 * 4                                   # cubes drawn 4x size so they are visible
-    for k, z in enumerate(zs):
-        ax = fig.add_subplot(gs[k // cols, k % cols])
-        sel = np.isclose(lay.z, z, atol=0.05)
-        ax.add_patch(Circle((0, 0), r, fill=False, ec=MUTED, lw=0.8, ls=(0, (3, 3))))
-        ax.add_patch(Circle((0, 0), a.bore / 2, fill=False, ec=MUTED, lw=0.6))
+    half = a.cube / 2                                       # true size
+
+    def draw_cubes(ax, sel, arrow):
         for (pp, ss) in zip(phi[sel], psi[sel]):
             c = r * np.array([np.cos(pp), np.sin(pp)])
             Rm = np.array([[np.cos(ss), -np.sin(ss)], [np.sin(ss), np.cos(ss)]])
@@ -137,14 +134,45 @@ def main():
             nh = (Rm @ np.array([[0, -half], [half, -half], [half, half], [0, half]]).T).T + c
             ax.add_patch(Polygon(sq, facecolor='#d0d7de', edgecolor=BODY, lw=0.6))
             ax.add_patch(Polygon(nh, facecolor=NORTH, edgecolor='none'))
-            ax.annotate('', xy=c + Rm @ [half * 2.2, 0], xytext=c, arrowprops=dict(arrowstyle='-|>', lw=0.8,
-                                                                                    color=INK, mutation_scale=7))
+            ax.annotate('', xy=c + Rm @ [arrow, 0], xytext=c, arrowprops=dict(arrowstyle='-|>', lw=0.8, color=INK,
+                                                                               mutation_scale=7))
+
+    for k, z in enumerate(zs):
+        ax = fig.add_subplot(gs[k // cols, k % cols])
+        sel = np.isclose(lay.z, z, atol=0.05)
+        ax.add_patch(Circle((0, 0), r, fill=False, ec=MUTED, lw=0.8, ls=(0, (3, 3))))
+        ax.add_patch(Circle((0, 0), a.bore / 2, fill=False, ec=MUTED, lw=0.6))
+        draw_cubes(ax, sel, half * 5)
         span = '' if rings is None else f'ring z {rings.z_bottom[k]:+.0f}..{rings.z_top[k]:+.0f}, '
         ax.set_title(f'{span}cubes at z {z:+.1f}\n{int(sel.sum())} cubes', fontsize=8.5, color=INK)
         ax.set_xlim(-112, 112); ax.set_ylim(-112, 112); ax.set_aspect('equal'); ax.axis('off')
         ax.annotate('', xy=(30, 0), xytext=(-30, 0), arrowprops=dict(arrowstyle='-|>', lw=0.8, color=MUTED))
         ax.text(0, 6, 'B0', ha='center', fontsize=7, color=MUTED)
-    ax = fig.add_subplot(gs[-1, :])
+    # zoom on the most crowded spot: the cube whose neighbour on its ring is closest
+    best = (np.inf, None, None)
+    for z in zs:
+        idx = np.flatnonzero(np.isclose(lay.z, z, atol=0.05))
+        if len(idx) < 2:
+            continue
+        o = idx[np.argsort(phi[idx])]
+        gaps = np.diff(np.r_[phi[o], phi[o[0]] + 2 * np.pi])
+        j = int(np.argmin(gaps))
+        if gaps[j] < best[0]:
+            best = (gaps[j], z, phi[o[j]] + gaps[j] / 2)
+    ax = fig.add_subplot(gs[-1, cols - 2:])
+    if best[1] is not None:
+        sel = np.isclose(lay.z, best[1], atol=0.05)
+        ax.add_patch(Circle((0, 0), a.bore / 2, fill=False, ec=MUTED, lw=0.8))
+        ax.add_patch(Circle((0, 0), r, fill=False, ec=MUTED, lw=0.6, ls=(0, (3, 3))))
+        draw_cubes(ax, sel, half * 2.2)
+        cx, cy = r * np.cos(best[2]), r * np.sin(best[2])
+        ax.set_xlim(cx - 18, cx + 18); ax.set_ylim(cy - 18, cy + 18); ax.set_aspect('equal')
+        ax.set_title(f'True size, most crowded spot (cubes at z {best[1]:+.1f}): closest centres '
+                     f'{2 * r * np.sin(best[0] / 2):.2f} mm,\n>= {2 * r * np.sin(best[0] / 2) - a.cube * np.sqrt(2):.1f}'
+                     f' mm of resin between cubes at any rotation; solid arc = ring OD', fontsize=8.5, color=INK)
+        ax.tick_params(labelsize=7)
+        ax.set_xlabel('x (mm)', fontsize=8, color=MUTED); ax.set_ylabel('y (mm)', fontsize=8, color=MUTED)
+    ax = fig.add_subplot(gs[-1, :cols - 2])
     ax.scatter(np.degrees(phi) % 360, lay.z, s=40, marker='s', facecolor='#d0d7de', edgecolor=BODY, zorder=2)
     ax.quiver(np.degrees(phi) % 360, lay.z, np.cos(psi - phi), np.sin(psi - phi), angles='uv', scale=70, width=0.0022,
               color=NORTH, zorder=3)
@@ -158,7 +186,7 @@ def main():
     ax.set_ylabel('z (mm)', fontsize=9, color=MUTED)
     ax.set_title('Unrolled: every cube (arrow = magnetization relative to the radial direction: right = outward, '
                  'up = +tangential); solid lines = ring boundaries, dashed = cube planes', fontsize=9, color=INK)
-    fig.suptitle(f'Shim cubes, build {b}: {len(lay)} x {a.cube} mm cubes at r {r:.1f} mm (squares drawn 4x size, '
+    fig.suptitle(f'Shim cubes, build {b}: {len(lay)} x {a.cube} mm cubes at r {r:.1f} mm (true size; arrows = magnetization, '
                  f'red = north half)', fontsize=12, color=INK)
     fig.tight_layout()
     f3 = os.path.join(a.shim_dir, f'shim_layout_b{b}.png')

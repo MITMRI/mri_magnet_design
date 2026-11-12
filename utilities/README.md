@@ -22,7 +22,7 @@ parallelized and chunked to stay at about 4 GB of RAM; `--jobs` sets the number 
 | `insertion_12cm.py` | Axial force on seated blocks while a neighbour is pushed into its pocket, and on the block being inserted | stdout | ~1 min |
 | `plot_slice_2d.py` | 2D cross-section of one plate (default: the one with the most blocks): block footprints, magnetization, bore, OD, DSV | `slice_z<z>.png` | seconds |
 | `plot_shim_12cm.py` | Pictures of a shim solution: Bx over the DSV surface and central planes before/after (real cubes), the cubes ring by ring | `field_sphere_b<i>.png`, `field_planes_b<i>.png`, `shim_layout_b<i>.png` | ~1 min |
-| `shim_12cm.py` | Passive shim insert (a stack of printed rings in the bore holding 1/8" cubes): placement from a field map or simulated as-built builds, as-built ppm with the cubes' own errors, loads on the cubes and the stack | `shim_<cube>mm_<rings>rings/` | ~6 min for 3 builds |
+| `shim_12cm.py` | Passive shim insert (a stack of printed rings in the bore holding 1/8" cubes): placement from a field map or simulated as-built builds, as-built ppm with the cubes' own errors, loads on the cubes and the stack | `shim_<cube>mm/` | ~6 min for 3 builds |
 
 Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `assembly.txt`, `insertion.txt`
 (stdout redirected), and `designs/12cm_bore200_84mT/tolerance*.txt`.
@@ -43,7 +43,7 @@ Saved outputs live next to the design, e.g. `designs/12cm_bore200/forces.txt`, `
   SLSQP refinement of every cube's ring angle and magnetization angle with exact fields. `--targets` sets the ppm
   targets tried; the cube count follows from the physics, at most `--max-cubes`. "real" = the cubes' own Br/angle
   errors (default +-3% / +-1.5 deg), one installation. `--parallel` builds run at once (~1.5-2 GB each).
-  `--match-plates`: one shim ring per main plate (boundaries halfway between plates), cubes at each ring's +z face.
+  One shim ring per main plate (boundaries halfway between plates), cubes at each ring's +z face.
   `--map map.csv` (x, y, z mm, Bx mT): shim a measured map instead of simulated builds; a few hundred to 1,000 points
   on the DSV surface are enough (Bx is harmonic, so its extremes are on the surface).
 - `tolerance_12cm.py`: errors are uniform within +-tol; the field is linearized in the errors and checked against

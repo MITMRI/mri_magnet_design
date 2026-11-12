@@ -1,7 +1,9 @@
 """
-Passive shim insert for a 12 cm design: a stack of printed rings that slides into the bore, each ring holding a few
-shim cubes (default 1/8" N42, K&J B222) lying flat - magnetization in the ring plane at any angle, at any angle
-around the ring. The stack bolts to the magnet's end cover. Same pipeline as the main array (field_design_12cm.py):
+Passive shim insert for a 12 cm design: a stack of printed rings that slides into the bore, one ring per main plate
+(boundaries halfway between plates, the end rings out to the magnet ends), each holding a few shim cubes (default
+1/8" N42, K&J B222) lying flat in pockets open at the ring's +z (top) face and closed by the next ring -
+magnetization in the ring plane at any angle, at any angle around the ring. The stack bolts to the magnet's end
+cover. Same pipeline as the main array (field_design_12cm.py):
 continuous optimum -> discrete magnets -> refinement.
 
 1. As-built builds: every block of the design gets its own remanence error (uniform within +-br_tol) and
@@ -28,13 +30,14 @@ on the nearest point, far coarser than a typical as-built error (~0.2-0.4 mT), a
 ~400 ppm; a 1/8" cube has 1/8 of both. 1/4" cubes in full rings with only the angles designed reached ~1,000 ppm as
 built with 216 cubes; 1/8" cubes placed by this pipeline reach ~300-360 ppm with 20-50.
 
-    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --match-plates --targets 100 50
-    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --match-plates --map map.csv --targets 100 50
+    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --targets 100 50
+    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --map map.csv --targets 100 50
 (--map: x, y, z in mm and Bx in mT, e.g. a few hundred points on the 120 mm sphere surface; the extremes of a
 harmonic field lie on the surface, so that is enough.)
-Builds run in parallel (--parallel, ~1.5-2 GB each at peak). Writes <design>/shim_<cube>mm_<rings>rings/: shim.log,
-summary.csv (per build and target), b<i>_layout.csv (ring, z, phi, magnetization angle psi of every cube),
-b<i>_cubes.csv (loads per cube), b<i>_insertion.csv (axial force vs insertion).
+Builds run in parallel (--parallel, ~1.5-2 GB each at peak). Writes <design>/shim_<cube>mm/ (shim_<cube>mm_map/ with
+--map): shim.log, summary.csv (per build and target), rings.csv (z span, height and cube plane of every ring, cubes per
+ring), b<i>_layout.csv (ring, z, phi, magnetization angle psi of every cube), b<i>_build.npz (simulated block errors),
+b<i>_cubes.csv (loads per cube), b<i>_insertion.csv (axial force vs insertion). Pictures: plot_shim_12cm.py.
 """
 import argparse
 import os
@@ -432,15 +435,9 @@ def main():
     ap.add_argument('--shim-ang-tol', type=float, default=1.5, help='+-deg, shim cubes')
     ap.add_argument('--price', type=float, default=0.22, help='$ per shim cube (B222)')
     ap.add_argument('--mass', type=float, default=0.24, help='g per shim cube (B222)')
-    ap.add_argument('--rings', type=int, default=12, help='shim ring planes, evenly spaced over +-zmax')
-    ap.add_argument('--ring-z', type=float, nargs='*', help='explicit ring plane z positions, mm')
-    ap.add_argument('--zmax', type=float, default=150)
-    ap.add_argument('--match-plates', action='store_true',
-                    help='one shim ring per main plate: ring boundaries halfway between plates (ends at the magnet '
-                         'ends), cubes at the +z (top) face of each ring')
     ap.add_argument('--top-gap', type=float, default=0.3, help='cube top below the ring top face, mm')
     ap.add_argument('--bore', type=float, default=200, help='clear bore of the magnet, mm (ring OD = bore - 2 fit)')
-    ap.add_argument('--targets', type=float, nargs='+', default=[200, 100, 50, 25, 10],
+    ap.add_argument('--targets', type=float, nargs='+', default=[100, 50],
                     help='ppm targets for the continuous optimum (fewest cubes that reach each)')
     ap.add_argument('--max-cubes', type=int, default=200)
     ap.add_argument('--grid', type=int, default=240, help='continuous positions per ring')
@@ -454,16 +451,12 @@ def main():
                     help='worker processes for the insertion sweep (~350 MB each)')
     a = ap.parse_args()
 
-    bounds = None
-    if a.match_plates:
-        pz = np.sort(pd.read_csv(a.csv).z.round(1).unique())
-        bounds = np.r_[pz[0] - BLOCK[2] / 2, (pz[:-1] + pz[1:]) / 2, pz[-1] + BLOCK[2] / 2]
-        ring_z = bounds[1:] - a.cube / 2 - a.top_gap
-    else:
-        ring_z = a.ring_z if a.ring_z else np.linspace(-a.zmax, a.zmax, a.rings)
-    st = Stack(a.cube, a.shim_br, ring_z, a.bore)
-    out = os.path.join(os.path.dirname(a.csv), f'shim_{a.cube:g}mm_' +
-                       ('plates' if a.match_plates else f'{len(st.z)}rings') + ('_map' if a.map else ''))
+    # one shim ring per main plate: boundaries halfway between plates, ends at the magnet ends; cubes at each ring's
+    # +z (top) face, the pocket open to the top and closed by the next ring
+    pz = np.sort(pd.read_csv(a.csv).z.round(1).unique())
+    bounds = np.r_[pz[0] - BLOCK[2] / 2, (pz[:-1] + pz[1:]) / 2, pz[-1] + BLOCK[2] / 2]
+    st = Stack(a.cube, a.shim_br, bounds[1:] - a.cube / 2 - a.top_gap, a.bore)
+    out = os.path.join(os.path.dirname(a.csv), f'shim_{a.cube:g}mm' + ('_map' if a.map else ''))
     os.makedirs(out, exist_ok=True)
     logf = open(os.path.join(out, 'shim.log'), 'w')
 
@@ -508,13 +501,12 @@ def main():
                      ).round(3).to_csv(os.path.join(out, f'b{b}_layout.csv'), index=False)
         if not a.no_loads:
             loads(st, best[1], best[2], best[3], bpos, bquat, builds[b][1], df.z.max(), a.jobs, out, b, log)
-    if bounds is not None:
-        rt = pd.DataFrame(dict(ring=np.arange(len(st.z)), z_bottom=bounds[:-1], z_top=bounds[1:],
-                               height=np.diff(bounds), cube_plane_z=st.z))
-        for b, (_, best, _) in enumerate(results):
-            rt[f'cubes_b{b}'] = np.bincount(best[1], minlength=len(st.z))
-        rt.round(2).to_csv(os.path.join(out, 'rings.csv'), index=False)
-        log('rings (one per main plate, cubes at the top face):\n' + rt.round(1).to_string(index=False))
+    rt = pd.DataFrame(dict(ring=np.arange(len(st.z)), z_bottom=bounds[:-1], z_top=bounds[1:],
+                           height=np.diff(bounds), cube_plane_z=st.z))
+    for b, (_, best, _) in enumerate(results):
+        rt[f'cubes_b{b}'] = np.bincount(best[1], minlength=len(st.z))
+    rt.round(2).to_csv(os.path.join(out, 'rings.csv'), index=False)
+    log('rings (one per main plate, cubes at the top face):\n' + rt.round(1).to_string(index=False))
     res = pd.DataFrame(rows)
     res.round(1).to_csv(os.path.join(out, 'summary.csv'), index=False)
     log('summary (median over builds):\n' + res.groupby('target').median(numeric_only=True).drop(columns='build')

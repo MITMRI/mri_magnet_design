@@ -1,0 +1,80 @@
+[     6 s] designs/12cm_bore200/placements.csv: 970 blocks; block errors Br +-3.0%, angle +-1.5 deg (uniform)
+[     6 s] shim stack: 12 ring planes at z = -153, -123, -93, -62, -31, -2, 27, 58, 89, 119, 149, 177 mm; ring OD 199.6, cube centres at r 96.55, clear bore 186.6 mm; 3.175 mm cubes lying flat (Br 1300 mT, errors +-3.0% / +-1.5 deg), at most 110 per ring, 200 in total
+[     6 s] build 0: unshimmed 1669 ppm, B0 95.98 mT
+[     6 s] build 1: unshimmed 3729 ppm, B0 96.00 mT
+[     6 s] build 2: unshimmed 4455 ppm, B0 96.12 mT
+build 0: continuous model ready; best reachable 20 ppm
+build 0:     target 100 ppm: continuous optimum 100 ppm with 19.9 cubes of magnet
+build 0:       best of 8 offsets: 22 cubes -> 341 ppm
+build 0: target 100: 22 cubes -> 341 ppm perfect, 354 median / 375 p90 real (one installation)
+build 0:     target 50 ppm: continuous optimum 50 ppm with 25.3 cubes of magnet
+build 0:       best of 8 offsets: 28 cubes -> 310 ppm
+build 0: target 50: 28 cubes -> 310 ppm perfect, 315 median / 345 p90 real (one installation)
+[   703 s] build 0 loads (as-built blocks + other cubes):
+[   703 s]     per cube: max force 0.588 N (ring z -62); max |Fr| 0.408, |Ft| 0.543, |Fz| 0.052 N; max torque 3.8 N mm (field 118 mT); field at the cubes 87-123 mT
+[   703 s]     worst reverse field on a cube 89 mT = 71 kA/m (N42 intrinsic coercivity >= 955 kA/m)
+[   703 s]     ring z   -93 ( 1 cubes): net F (-0.01, +0.00, -0.01) N, torque about the bore axis -0.003 N m
+[   703 s]     ring z   -62 ( 4 cubes): net F (+0.02, -0.03, +0.01) N, torque about the bore axis +0.004 N m
+[   703 s]     ring z   -31 ( 4 cubes): net F (+0.01, +0.00, -0.00) N, torque about the bore axis -0.001 N m
+[   703 s]     ring z    -2 ( 3 cubes): net F (-0.00, +0.00, -0.00) N, torque about the bore axis +0.001 N m
+[   703 s]     ring z   +27 ( 4 cubes): net F (+0.01, +0.00, +0.00) N, torque about the bore axis -0.002 N m
+[   703 s]     ring z   +58 ( 7 cubes): net F (-0.08, +0.02, +0.03) N, torque about the bore axis -0.003 N m
+[   703 s]     ring z   +89 ( 5 cubes): net F (-0.01, -0.04, +0.16) N, torque about the bore axis -0.004 N m
+[   703 s]     whole stack (what the bolts carry): F (-0.07, -0.04, +0.19) N, torque (-0.001, +0.007, -0.008) N m
+[   714 s]     sliding the stack in from +z: peak axial force +1.65 N at 90 mm to go (+ = pushed back out); seated +0.19 N
+build 1: continuous model ready; best reachable 22 ppm
+build 1:     target 100 ppm: continuous optimum 100 ppm with 28.1 cubes of magnet
+build 1:       best of 8 offsets: 30 cubes -> 286 ppm
+build 1: target 100: 30 cubes -> 286 ppm perfect, 312 median / 341 p90 real (one installation)
+build 1:     target 50 ppm: continuous optimum 50 ppm with 33.1 cubes of magnet
+build 1:       best of 8 offsets: 33 cubes -> 310 ppm
+build 1: target 50: 33 cubes -> 310 ppm perfect, 333 median / 359 p90 real (one installation)
+[   715 s] build 1 loads (as-built blocks + other cubes):
+[   715 s]     per cube: max force 0.604 N (ring z -62); max |Fr| 0.267, |Ft| 0.572, |Fz| 0.018 N; max torque 3.2 N mm (field 97 mT); field at the cubes 57-113 mT
+[   715 s]     worst reverse field on a cube 95 mT = 76 kA/m (N42 intrinsic coercivity >= 955 kA/m)
+[   715 s]     ring z   -62 ( 6 cubes): net F (+0.03, -0.05, +0.03) N, torque about the bore axis -0.013 N m
+[   715 s]     ring z   -31 ( 6 cubes): net F (+0.00, +0.01, +0.00) N, torque about the bore axis +0.001 N m
+[   715 s]     ring z    -2 ( 5 cubes): net F (-0.02, -0.01, -0.00) N, torque about the bore axis -0.007 N m
+[   715 s]     ring z   +27 ( 7 cubes): net F (+0.01, +0.00, -0.00) N, torque about the bore axis +0.005 N m
+[   715 s]     ring z   +58 ( 6 cubes): net F (-0.07, +0.06, -0.02) N, torque about the bore axis +0.002 N m
+[   715 s]     whole stack (what the bolts carry): F (-0.05, +0.01, +0.00) N, torque (-0.011, -0.007, -0.013) N m
+[   726 s]     sliding the stack in from +z: peak axial force +1.17 N at 120 mm to go (+ = pushed back out); seated +0.00 N
+build 2: continuous model ready; best reachable 21 ppm
+build 2:     target 100 ppm: continuous optimum 100 ppm with 42.8 cubes of magnet
+build 2:       best of 8 offsets: 45 cubes -> 335 ppm
+build 2: target 100: 45 cubes -> 335 ppm perfect, 357 median / 378 p90 real (one installation)
+build 2:     target 50 ppm: continuous optimum 50 ppm with 49.0 cubes of magnet
+build 2:       best of 8 offsets: 51 cubes -> 227 ppm
+build 2: target 50: 51 cubes -> 227 ppm perfect, 248 median / 269 p90 real (one installation)
+[   728 s] build 2 loads (as-built blocks + other cubes):
+[   728 s]     per cube: max force 0.696 N (ring z +89); max |Fr| 0.358, |Ft| 0.692, |Fz| 0.046 N; max torque 3.2 N mm (field 96 mT); field at the cubes 63-177 mT
+[   728 s]     worst reverse field on a cube 93 mT = 74 kA/m (N42 intrinsic coercivity >= 955 kA/m)
+[   728 s]     ring z   -93 ( 8 cubes): net F (-0.20, +0.08, +0.25) N, torque about the bore axis -0.001 N m
+[   728 s]     ring z   -62 (10 cubes): net F (+0.06, +0.05, -0.06) N, torque about the bore axis -0.007 N m
+[   728 s]     ring z   -31 ( 8 cubes): net F (+0.01, -0.00, -0.00) N, torque about the bore axis -0.009 N m
+[   728 s]     ring z    -2 ( 4 cubes): net F (+0.02, +0.00, +0.00) N, torque about the bore axis +0.002 N m
+[   728 s]     ring z   +27 ( 5 cubes): net F (+0.01, -0.00, -0.00) N, torque about the bore axis +0.002 N m
+[   728 s]     ring z   +58 ( 9 cubes): net F (-0.03, -0.06, +0.01) N, torque about the bore axis -0.009 N m
+[   728 s]     ring z   +89 ( 7 cubes): net F (+0.11, -0.03, +0.06) N, torque about the bore axis +0.001 N m
+[   728 s]     whole stack (what the bolts carry): F (-0.03, +0.05, +0.26) N, torque (+0.006, -0.004, -0.020) N m
+[   746 s]     sliding the stack in from +z: peak axial force -2.65 N at 270 mm to go (+ = pushed back out); seated +0.26 N
+[   746 s] rings (one per main plate, cubes at the top face):
+ ring  z_bottom  z_top  height  cube_plane_z  cubes_b0  cubes_b1  cubes_b2
+    0    -178.9 -151.2    27.7        -153.1         0         0         0
+    1    -151.2 -121.2    30.0        -123.1         0         0         0
+    2    -121.2  -91.2    30.0         -93.1         1         0         8
+    3     -91.2  -60.2    31.0         -62.1         4         6        10
+    4     -60.2  -29.2    31.0         -31.1         4         6         8
+    5     -29.2    0.0    29.2          -1.9         3         5         4
+    6       0.0   29.2    29.2          27.3         4         7         5
+    7      29.2   60.2    31.0          58.3         7         6         9
+    8      60.2   91.2    31.0          89.3         5         0         7
+    9      91.2  121.2    30.0         119.3         0         0         0
+   10     121.2  151.2    30.0         149.3         0         0         0
+   11     151.2  178.9    27.7         177.0         0         0         0
+[   746 s] summary (median over builds):
+        continuous_ppm  continuous_cubes  cubes  unshimmed  perfect_cubes  real_median  real_p90  mass_g  cost
+target                                                                                                        
+50                50.0              33.0   33.0     3729.0          310.0        315.0     345.0     8.0   7.0
+100              100.0              28.0   30.0     3729.0          335.0        354.0     375.0     7.0   7.0
+[   746 s] -> designs/12cm_bore200/shim_3.175mm/
