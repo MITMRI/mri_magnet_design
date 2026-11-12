@@ -124,7 +124,24 @@ Other targets (build 0): 200 ppm -> 16 cubes, 384; 50 -> 28 cubes, 402; 25 -> 53
 per shim (buy ~100). 1/4" cubes are too coarse this close to the DSV: one puts ~14,000 ppm on the nearest point and its
 own 3% error ~400 ppm; full rings of 1/4" cubes with designed angles reached ~1,000 ppm as built with 216 cubes.
 
-**Rings.** 12 ring planes were offered (z = +-13.6, +-40.9, +-68.2, +-95.5, +-122.7, +-150 mm, 27.27 mm apart); the
+**Rings matched to the main plates** (`--match-plates`, results in `shim_3.175mm_plates/`): one shim ring per main
+plate, boundaries halfway between plates (ends at the magnet ends, +-178.9 mm), so heights are 27.7-31 mm; cubes at
+each ring's +z face (cube centre 1.9 mm below it, pocket open to the top and closed by the next ring). Ring OD
+199.6 mm, ID 186.6 mm. As built (median / p90): build 0 315 / 345 (28 cubes), build 1 312 / 341 (30), build 2
+248 / 269 (51). Cubes land only in rings 2-8 (z -121 to +91 mm); see `rings.csv` for heights and cubes per ring.
+
+Worst build (2, 4,455 ppm unshimmed), real cubes, one installation:
+
+![field on the DSV](shim_3.175mm_plates/field_sphere_b2.png)
+![central planes](shim_3.175mm_plates/field_planes_b2.png)
+![shim cubes](shim_3.175mm_plates/shim_layout_b2.png)
+
+**From a measured map.** Tested with a simulated build sampled at 300 points on the 120 mm sphere surface (1 uT
+noise), `--map`: 3,612 ppm -> 217 ppm on the map points; the true field after shimming was 313 ppm (median of real
+cube draws) over 2,000 surface points and 268 ppm inside the sphere. Map at least ~500-1,000 surface points so the map
+does not flatter the result.
+
+**Rings (first study).** 12 ring planes were offered (z = +-13.6, +-40.9, +-68.2, +-95.5, +-122.7, +-150 mm, 27.27 mm apart); the
 cubes only ever landed on the 8 middle ones (|z| <= 95.5). Printed as a stack of 8 rings 27.27 mm tall, cube pockets
 at each ring's mid-height, the stack is 218 mm long. Each ring is reprinted per shim solution; the rings need keys
 so their rotation is fixed (a 1 deg ring rotation turns every cube in it).

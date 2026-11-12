@@ -28,7 +28,10 @@ on the nearest point, far coarser than a typical as-built error (~0.2-0.4 mT), a
 ~400 ppm; a 1/8" cube has 1/8 of both. 1/4" cubes in full rings with only the angles designed reached ~1,000 ppm as
 built with 216 cubes; 1/8" cubes placed by this pipeline reach ~300-360 ppm with 20-50.
 
-    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --targets 100
+    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --match-plates --targets 100 50
+    python utilities/shim_12cm.py designs/12cm_bore200/placements.csv --match-plates --map map.csv --targets 100 50
+(--map: x, y, z in mm and Bx in mT, e.g. a few hundred points on the 120 mm sphere surface; the extremes of a
+harmonic field lie on the surface, so that is enough.)
 Builds run in parallel (--parallel, ~1.5-2 GB each at peak). Writes <design>/shim_<cube>mm_<rings>rings/: shim.log,
 summary.csv (per build and target), b<i>_layout.csv (ring, z, phi, magnetization angle psi of every cube),
 b<i>_cubes.csv (loads per cube), b<i>_insertion.csv (axial force vs insertion).
@@ -262,8 +265,7 @@ def design_density(st, dens, Bopt, Popt, Bchk, Pchk, target, max_cubes, starts, 
 
 def run_build(job):
     """One as-built build: continuous model once, then every target; returns rows and the best layout."""
-    a, b, Bopt, Bchk, st = job
-    Popt, Pchk = sphere_points(a.opt_points, a.dsv / 2), sphere_points(a.check_points, a.dsv / 2)
+    a, b, Bopt, Bchk, st, Popt, Pchk = job
     rng = np.random.default_rng(a.seed + 1000 + b)
     lines = []
 
@@ -415,6 +417,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('csv')
     ap.add_argument('--builds', type=int, default=3)
+    ap.add_argument('--map', help='measured field map csv: x, y, z (mm), Bx (mT), e.g. points on the DSV surface; '
+                                  'replaces the simulated builds')
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--br', type=float, default=1300, help='main block remanence, mT')
     ap.add_argument('--br-tol', type=float, default=3.0, help='+-%% remanence error of the main blocks')
@@ -431,6 +435,10 @@ def main():
     ap.add_argument('--rings', type=int, default=12, help='shim ring planes, evenly spaced over +-zmax')
     ap.add_argument('--ring-z', type=float, nargs='*', help='explicit ring plane z positions, mm')
     ap.add_argument('--zmax', type=float, default=150)
+    ap.add_argument('--match-plates', action='store_true',
+                    help='one shim ring per main plate: ring boundaries halfway between plates (ends at the magnet '
+                         'ends), cubes at the +z (top) face of each ring')
+    ap.add_argument('--top-gap', type=float, default=0.3, help='cube top below the ring top face, mm')
     ap.add_argument('--bore', type=float, default=200, help='clear bore of the magnet, mm (ring OD = bore - 2 fit)')
     ap.add_argument('--targets', type=float, nargs='+', default=[200, 100, 50, 25, 10],
                     help='ppm targets for the continuous optimum (fewest cubes that reach each)')
@@ -446,9 +454,16 @@ def main():
                     help='worker processes for the insertion sweep (~350 MB each)')
     a = ap.parse_args()
 
-    ring_z = a.ring_z if a.ring_z else np.linspace(-a.zmax, a.zmax, a.rings)
+    bounds = None
+    if a.match_plates:
+        pz = np.sort(pd.read_csv(a.csv).z.round(1).unique())
+        bounds = np.r_[pz[0] - BLOCK[2] / 2, (pz[:-1] + pz[1:]) / 2, pz[-1] + BLOCK[2] / 2]
+        ring_z = bounds[1:] - a.cube / 2 - a.top_gap
+    else:
+        ring_z = a.ring_z if a.ring_z else np.linspace(-a.zmax, a.zmax, a.rings)
     st = Stack(a.cube, a.shim_br, ring_z, a.bore)
-    out = os.path.join(os.path.dirname(a.csv), f'shim_{a.cube:g}mm_{len(st.z)}rings')
+    out = os.path.join(os.path.dirname(a.csv), f'shim_{a.cube:g}mm_' +
+                       ('plates' if a.match_plates else f'{len(st.z)}rings') + ('_map' if a.map else ''))
     os.makedirs(out, exist_ok=True)
     logf = open(os.path.join(out, 'shim.log'), 'w')
 
@@ -456,16 +471,33 @@ def main():
         s = f'[{time.time() - T0:6.0f} s] {s}'
         print(s, flush=True); logf.write(s + '\n'); logf.flush()
 
-    Popt, Pchk = sphere_points(a.opt_points, a.dsv / 2), sphere_points(a.check_points, a.dsv / 2)
-    df, bpos, bquat, builds = as_built(a.csv, a.br, a.br_tol, a.ang_tol, [Popt, Pchk], a.seed, a.builds)
-    log(f'{a.csv}: {len(df)} blocks; block errors Br +-{a.br_tol}%, angle +-{a.ang_tol} deg (uniform)')
+    if a.map:
+        # measured map: x, y, z (mm), Bx (mT; B0 along x), e.g. points on the DSV surface. Bx is harmonic, so a map of
+        # the sphere surface holds the extremes of the whole sphere. Optimize on up to opt_points of it, check on all.
+        M = pd.read_csv(a.map)
+        Pchk, Bmap = M[['x', 'y', 'z']].to_numpy(float), np.abs(M['Bx'].to_numpy(float))
+        sub = np.linspace(0, len(Pchk) - 1, min(a.opt_points, len(Pchk))).round().astype(int)
+        Popt = Pchk[sub]
+        df = pd.read_csv(a.csv)
+        bpos = df[['x', 'y', 'z']].to_numpy()
+        bquat = R.from_euler('z', df.rot_z_deg.to_numpy()[:, None], degrees=True).as_quat()
+        builds = [((Bmap[sub], Bmap), np.tile([a.br, 0, 0], (len(df), 1)))]   # loads use nominal blocks
+        rad = np.linalg.norm(Pchk - Pchk.mean(0), axis=1)
+        log(f'{a.map}: {len(Pchk)} measured points (radius {rad.min():.1f}-{rad.max():.1f} mm about '
+            f'{np.round(Pchk.mean(0), 1).tolist()}), optimizing on {len(Popt)}; B0 {Bmap.mean():.3f} mT')
+    else:
+        Popt, Pchk = sphere_points(a.opt_points, a.dsv / 2), sphere_points(a.check_points, a.dsv / 2)
+        df, bpos, bquat, builds = as_built(a.csv, a.br, a.br_tol, a.ang_tol, [Popt, Pchk], a.seed, a.builds)
+        log(f'{a.csv}: {len(df)} blocks; block errors Br +-{a.br_tol}%, angle +-{a.ang_tol} deg (uniform)')
     log(f'shim stack: {len(st.z)} ring planes at z = {", ".join(f"{z:.0f}" for z in st.z)} mm; ring OD {st.od:.1f}, '
         f'cube centres at r {st.r:.2f}, clear bore {st.clear:.1f} mm; {a.cube} mm cubes lying flat '
         f'(Br {a.shim_br:.0f} mT, errors +-{a.shim_br_tol}% / +-{a.shim_ang_tol} deg), at most {st.per_ring} per ring, '
         f'{a.max_cubes} in total')
-    for b, ((Bopt, Bchk), _) in enumerate(builds):
+    for b, ((Bopt, Bchk), bmag) in enumerate(builds):
         log(f'build {b}: unshimmed {ppm(Bchk):.0f} ppm, B0 {Bchk.mean():.2f} mT')
-    jobs = [(a, b, Bopt, Bchk, st) for b, ((Bopt, Bchk), _) in enumerate(builds)]
+        if not a.map:
+            np.savez(os.path.join(out, f'b{b}_build.npz'), bmag=bmag)            # the build's block magnetizations
+    jobs = [(a, b, Bopt, Bchk, st, Popt, Pchk) for b, ((Bopt, Bchk), _) in enumerate(builds)]
     with ProcessPoolExecutor(min(a.parallel, len(jobs))) as ex:
         results = list(ex.map(run_build, jobs))
     rows = [r for res_, _, _ in results for r in res_]
@@ -476,6 +508,13 @@ def main():
                      ).round(3).to_csv(os.path.join(out, f'b{b}_layout.csv'), index=False)
         if not a.no_loads:
             loads(st, best[1], best[2], best[3], bpos, bquat, builds[b][1], df.z.max(), a.jobs, out, b, log)
+    if bounds is not None:
+        rt = pd.DataFrame(dict(ring=np.arange(len(st.z)), z_bottom=bounds[:-1], z_top=bounds[1:],
+                               height=np.diff(bounds), cube_plane_z=st.z))
+        for b, (_, best, _) in enumerate(results):
+            rt[f'cubes_b{b}'] = np.bincount(best[1], minlength=len(st.z))
+        rt.round(2).to_csv(os.path.join(out, 'rings.csv'), index=False)
+        log('rings (one per main plate, cubes at the top face):\n' + rt.round(1).to_string(index=False))
     res = pd.DataFrame(rows)
     res.round(1).to_csv(os.path.join(out, 'summary.csv'), index=False)
     log('summary (median over builds):\n' + res.groupby('target').median(numeric_only=True).drop(columns='build')

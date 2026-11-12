@@ -1,0 +1,46 @@
+[     6 s] designs/12cm_bore200/placements.csv: 970 blocks; block errors Br +-3.0%, angle +-1.5 deg (uniform)
+[     6 s] shim stack: 12 ring planes at z = -153, -123, -93, -62, -31, -2, 27, 58, 89, 119, 149, 177 mm; ring OD 199.6, cube centres at r 96.55, clear bore 186.6 mm; 3.175 mm cubes lying flat (Br 1300 mT, errors +-3.0% / +-1.5 deg), at most 110 per ring, 200 in total
+[     6 s] build 0: unshimmed 1669 ppm, B0 95.98 mT
+[     6 s] build 1: unshimmed 3729 ppm, B0 96.00 mT
+[     6 s] build 2: unshimmed 4455 ppm, B0 96.12 mT
+build 0: continuous model ready; best reachable 20 ppm
+build 0:     target 100 ppm: continuous optimum 100 ppm with 19.9 cubes of magnet
+build 0:       best of 8 offsets: 22 cubes -> 341 ppm
+build 0: target 100: 22 cubes -> 341 ppm perfect, 354 median / 375 p90 real (one installation)
+build 0:     target 50 ppm: continuous optimum 50 ppm with 25.3 cubes of magnet
+build 0:       best of 8 offsets: 28 cubes -> 310 ppm
+build 0: target 50: 28 cubes -> 310 ppm perfect, 315 median / 345 p90 real (one installation)
+build 1: continuous model ready; best reachable 22 ppm
+build 1:     target 100 ppm: continuous optimum 100 ppm with 28.1 cubes of magnet
+build 1:       best of 8 offsets: 30 cubes -> 286 ppm
+build 1: target 100: 30 cubes -> 286 ppm perfect, 312 median / 341 p90 real (one installation)
+build 1:     target 50 ppm: continuous optimum 50 ppm with 33.1 cubes of magnet
+build 1:       best of 8 offsets: 33 cubes -> 310 ppm
+build 1: target 50: 33 cubes -> 310 ppm perfect, 333 median / 359 p90 real (one installation)
+build 2: continuous model ready; best reachable 21 ppm
+build 2:     target 100 ppm: continuous optimum 100 ppm with 42.8 cubes of magnet
+build 2:       best of 8 offsets: 45 cubes -> 335 ppm
+build 2: target 100: 45 cubes -> 335 ppm perfect, 357 median / 378 p90 real (one installation)
+build 2:     target 50 ppm: continuous optimum 50 ppm with 49.0 cubes of magnet
+build 2:       best of 8 offsets: 51 cubes -> 227 ppm
+build 2: target 50: 51 cubes -> 227 ppm perfect, 248 median / 269 p90 real (one installation)
+[   704 s] rings (one per main plate, cubes at the top face):
+ ring  z_bottom  z_top  height  cube_plane_z  cubes_b0  cubes_b1  cubes_b2
+    0    -178.9 -151.2    27.7        -153.1         0         0         0
+    1    -151.2 -121.2    30.0        -123.1         0         0         0
+    2    -121.2  -91.2    30.0         -93.1         1         0         8
+    3     -91.2  -60.2    31.0         -62.1         4         6        10
+    4     -60.2  -29.2    31.0         -31.1         4         6         8
+    5     -29.2    0.0    29.2          -1.9         3         5         4
+    6       0.0   29.2    29.2          27.3         4         7         5
+    7      29.2   60.2    31.0          58.3         7         6         9
+    8      60.2   91.2    31.0          89.3         5         0         7
+    9      91.2  121.2    30.0         119.3         0         0         0
+   10     121.2  151.2    30.0         149.3         0         0         0
+   11     151.2  178.9    27.7         177.0         0         0         0
+[   704 s] summary (median over builds):
+        continuous_ppm  continuous_cubes  cubes  unshimmed  perfect_cubes  real_median  real_p90  mass_g  cost
+target                                                                                                        
+50.0              50.0              33.0   33.0     3729.0          310.0        315.0     345.0     8.0   7.0
+100.0            100.0              28.0   30.0     3729.0          335.0        354.0     375.0     7.0   7.0
+[   704 s] -> designs/12cm_bore200/shim_3.175mm_plates/
