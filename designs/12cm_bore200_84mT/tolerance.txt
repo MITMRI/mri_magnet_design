@@ -1,0 +1,15 @@
+858 blocks, 4000 sensor points, tables in 24 s
+ideal: B0 84.90 mT, 48.5 ppm
+  check 0: linear  5786.7 ppm, exact  5785.0 ppm
+  check 1: linear  3662.1 ppm, exact  3662.7 ppm
+  check 2: linear  3741.4 ppm, exact  3736.9 ppm
+
+2000 random builds per case; ppm over the 120 mm sphere surface (ideal 48.5)
+case                               median     mean      p90      p99      max   B0 sd (mT)
+position +-0.05 mm only             250.6    255.8    328.7    399.3    479.7   0.002
++ angle +-1 deg                    1555.2   1589.4   2099.0   2598.7   3061.0   0.018
++ angle +-3 deg                    4609.5   4709.7   6219.0   7671.9   9254.0   0.054
++ Br +-0.5%                         564.2    576.0    765.5    947.0   1351.1   0.011
++ Br +-1.5%                        1527.8   1564.1   2085.6   2588.3   3882.1   0.032
+all: pos 0.05, 1 deg, 0.5%         1625.4   1662.7   2192.1   2722.5   3168.8   0.021
+all: pos 0.05, 3 deg, 1.5%         4822.2   4930.0   6525.1   8018.0   9404.9   0.063

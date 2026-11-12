@@ -1,0 +1,55 @@
+970 blocks, Br 1300 mT, 144 quadrature points per block
+net force on whole magnet (should be ~0): [-0.04 -0.   -0.  ] N
+
+per block (N, N m):
+  max |F | =   38.72  (  3.95 kgf)  at r=151.5 z=+166.2 rot=0.0
+  max |Fr| =   33.24  (  3.39 kgf)  at r=151.5 z=-106.2 rot=0.0
+  max |Ft| =   36.66  (  3.74 kgf)  at r=151.5 z=+106.2 rot=281.7
+  max |Fz| =   25.21  (  2.57 kgf)  at r=151.5 z=-166.2 rot=0.0
+  max |T | =    1.08  (  1.08 N m)  at r=151.5 z=+14.2 rot=90.0
+  max |Tz| =    1.08  (  1.08 N m)  at r=151.5 z=+14.2 rot=90.0
+
+per ring (holder ring = one radius at one z):
+     z      r    n   sum Fz N   max|F| N  max|Fr| N  max|Ft| N  max|Fz| N  max|T| Nm  mean Fr N
+ -166.2  111.5   35      -89.5      18.62       9.94      17.86       5.70      0.559      +0.05
+ -166.2  131.5   38      -86.2      19.48      16.96      19.20       3.28      0.367      +2.86
+ -166.2  151.5   43     -538.1      38.72      29.39      19.23      25.21      0.587      -9.11
+ -136.2  121.5   39     +108.9      15.45      13.92      13.96       8.66      0.613      -3.00
+ -136.2  151.5   48     -175.6      13.25       6.40       9.89      11.20      0.939      +1.25
+ -106.2  131.5   18      +21.1      33.29      33.06      12.77       4.66      0.172     +14.53
+ -106.2  151.5   46      -94.5      36.76      33.24      36.66       5.25      0.954      -0.35
+  -76.2  121.5   21      -14.1      23.63      23.60       7.84       7.00      0.110      -8.50
+  -76.2  151.5   47     +100.9      15.72      11.89      15.59       6.25      0.950      +3.26
+  -44.2  131.5   31     -146.2      22.05      13.73      18.13      16.23      0.216      +4.72
+  -44.2  151.5   48     -276.6      28.74      28.03      25.92       8.45      0.987      -3.49
+  -14.2  131.5   23     -282.1      25.75       7.86      13.73      24.99      0.091      +1.54
+  -14.2  151.5   48     -279.9      32.32      28.43      29.86       9.03      1.080      +0.29
+  +14.2  131.5   23     +282.1      25.75       7.86      13.73      24.99      0.091      +1.54
+  +14.2  151.5   48     +279.9      32.32      28.43      29.86       9.03      1.080      +0.29
+  +44.2  131.5   31     +146.2      22.05      13.73      18.13      16.23      0.216      +4.72
+  +44.2  151.5   48     +276.6      28.74      28.03      25.92       8.45      0.987      -3.49
+  +76.2  121.5   21      +14.1      23.63      23.60       7.84       7.00      0.110      -8.50
+  +76.2  151.5   47     -100.9      15.72      11.89      15.59       6.25      0.950      +3.26
+ +106.2  131.5   18      -21.1      33.29      33.06      12.77       4.66      0.172     +14.53
+ +106.2  151.5   46      +94.5      36.76      33.24      36.66       5.25      0.954      -0.35
+ +136.2  121.5   39     -108.9      15.45      13.92      13.96       8.66      0.613      -3.00
+ +136.2  151.5   48     +175.6      13.25       6.40       9.89      11.20      0.939      +1.25
+ +166.2  111.5   35      +89.5      18.62       9.94      17.86       5.70      0.559      +0.05
+ +166.2  131.5   38      +86.2      19.48      16.96      19.20       3.28      0.367      +2.86
+ +166.2  151.5   43     +538.1      38.72      29.39      19.23      25.21      0.587      -9.11
+
+per slice (all rings at one z) and cumulative axial load toward the midplane:
+  z  -166.2: slice Fz    -713.8 N (  -72.8 kgf), outboard stack incl. this slice    -713.8 N (  -72.8 kgf)
+  z  -136.2: slice Fz     -66.7 N (   -6.8 kgf), outboard stack incl. this slice    -780.4 N (  -79.6 kgf)
+  z  -106.2: slice Fz     -73.4 N (   -7.5 kgf), outboard stack incl. this slice    -853.8 N (  -87.0 kgf)
+  z   -76.2: slice Fz     +86.8 N (   +8.8 kgf), outboard stack incl. this slice    -767.0 N (  -78.2 kgf)
+  z   -44.2: slice Fz    -422.8 N (  -43.1 kgf), outboard stack incl. this slice   -1189.8 N ( -121.3 kgf)
+  z   -14.2: slice Fz    -562.1 N (  -57.3 kgf), outboard stack incl. this slice   -1751.9 N ( -178.6 kgf)
+  z   +14.2: slice Fz    +562.1 N (  +57.3 kgf), outboard stack incl. this slice   +1751.9 N ( +178.6 kgf)
+  z   +44.2: slice Fz    +422.8 N (  +43.1 kgf), outboard stack incl. this slice   +1189.8 N ( +121.3 kgf)
+  z   +76.2: slice Fz     -86.8 N (   -8.8 kgf), outboard stack incl. this slice    +767.0 N (  +78.2 kgf)
+  z  +106.2: slice Fz     +73.4 N (   +7.5 kgf), outboard stack incl. this slice    +853.8 N (  +87.0 kgf)
+  z  +136.2: slice Fz     +66.7 N (   +6.8 kgf), outboard stack incl. this slice    +780.4 N (  +79.6 kgf)
+  z  +166.2: slice Fz    +713.8 N (  +72.8 kgf), outboard stack incl. this slice    +713.8 N (  +72.8 kgf)
+
+force between the two halves (sum Fz for z>0): +1751.9 N (+178.6 kgf); negative = halves attract

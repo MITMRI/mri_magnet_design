@@ -1,0 +1,89 @@
+970 blocks, 12 plates at z = -166.2, -136.2, -106.2, -76.2, -44.2, -14.2, 14.2, 44.2, 76.2, 106.2, 136.2, 166.2 mm; Br 1300 mT
+extra gap beyond final position (mm): 0, 1, 2, 3, 5, 10, 20, 50
+
+== order A  one end to the other
+   step                                                                              plate push N vs gap   peak push    worst block pull-out N (gap, plate z)
+   add z=-136.2 onto 1 plate(s)                   535    502    473    446    399    309    201     72     +535 (+54.5 kgf)    21.8 (gap 0, z=-166.2)
+   add z=-106.2 onto 2 plate(s)                   549    503    464    429    372    274    173     63     +549 (+56.0 kgf)    24.5 (gap 0, z=-106.2)
+   add z=-76.2 onto 3 plate(s)                    618    558    507    464    395    284    175     63     +618 (+63.0 kgf)    26.4 (gap 0, z=-76.2)
+   add z=-44.2 onto 4 plate(s)                    547    505    469    438    385    293    190     71     +547 (+55.8 kgf)    25.4 (gap 50, z=-76.2)
+   add z=-14.2 onto 5 plate(s)                    919    800    706    632    522    363    218     75     +919 (+93.7 kgf)    26.0 (gap 0, z=-14.2)
+   add z=+14.2 onto 6 plate(s)                   1481   1231   1044    899    695    432    237     78    +1481 (+151.0 kgf)    35.0 (gap 0, z=+14.2)
+   add z=+44.2 onto 7 plate(s)                    970    848    753    676    562    396    241     84     +970 (+98.9 kgf)    33.9 (gap 50, z=+14.2)
+   add z=+76.2 onto 8 plate(s)                    531    490    454    423    372    283    183     69     +531 (+54.1 kgf)    27.4 (gap 50, z=+44.2)
+   add z=+106.2 onto 9 plate(s)                   622    562    511    468    399    286    176     64     +622 (+63.4 kgf)    26.3 (gap 0, z=+106.2)
+   add z=+136.2 onto 10 plate(s)                  601    554    513    477    417    314    204     79     +601 (+61.3 kgf)    26.4 (gap 0, z=+136.2)
+   add z=+166.2 onto 11 plate(s)                  714    676    641    610    553    443    302    121     +714 (+72.8 kgf)    25.2 (gap 0, z=+166.2)
+
+== order B  each half from the midplane outward, then join
+   step                                                                              plate push N vs gap   peak push    worst block pull-out N (gap, plate z)
+   add z=+44.2 onto 1 plate(s)                    800    685    595    524    421    277    155     46     +800 (+81.6 kgf)    24.3 (gap 0, z=+44.2)
+   add z=+76.2 onto 2 plate(s)                    480    440    406    376    327    244    153     53     +480 (+48.9 kgf)    24.9 (gap 0, z=+14.2)
+   add z=+106.2 onto 3 plate(s)                   599    540    489    447    378    268    161     56     +599 (+61.1 kgf)    25.8 (gap 0, z=+106.2)
+   add z=+136.2 onto 4 plate(s)                   586    539    498    462    403    301    194     74     +586 (+59.7 kgf)    26.2 (gap 0, z=+136.2)
+   add z=+166.2 onto 5 plate(s)                   703    665    631    599    543    434    295    116     +703 (+71.6 kgf)    26.0 (gap 0, z=+14.2)
+   add z=-44.2 onto 1 plate(s)                    800    685    595    524    421    277    155     46     +800 (+81.6 kgf)    24.3 (gap 0, z=-44.2)
+   add z=-76.2 onto 2 plate(s)                    480    440    406    376    327    244    153     53     +480 (+48.9 kgf)    24.9 (gap 0, z=-14.2)
+   add z=-106.2 onto 3 plate(s)                   599    540    489    447    378    268    161     56     +599 (+61.1 kgf)    25.8 (gap 0, z=-106.2)
+   add z=-136.2 onto 4 plate(s)                   586    539    498    462    403    301    194     74     +586 (+59.7 kgf)    26.2 (gap 0, z=-136.2)
+   add z=-166.2 onto 5 plate(s)                   703    665    631    599    543    434    295    116     +703 (+71.6 kgf)    26.0 (gap 0, z=-14.2)
+   join halves (6 + 6 plates)                    1752   1493   1297   1145    926    631    387    149    +1752 (+178.6 kgf)    25.2 (gap 0, z=+166.2)
+
+== order C  each half from its end inward, then join
+   step                                                                              plate push N vs gap   peak push    worst block pull-out N (gap, plate z)
+   add z=+136.2 onto 1 plate(s)                   535    502    473    446    399    309    201     72     +535 (+54.5 kgf)    21.8 (gap 0, z=+166.2)
+   add z=+106.2 onto 2 plate(s)                   549    503    464    429    372    274    173     63     +549 (+56.0 kgf)    24.5 (gap 0, z=+106.2)
+   add z=+76.2 onto 3 plate(s)                    618    558    507    464    395    284    175     63     +618 (+63.0 kgf)    26.4 (gap 0, z=+76.2)
+   add z=+44.2 onto 4 plate(s)                    547    505    469    438    385    293    190     71     +547 (+55.8 kgf)    25.4 (gap 50, z=+76.2)
+   add z=+14.2 onto 5 plate(s)                    919    800    706    632    522    363    218     75     +919 (+93.7 kgf)    26.0 (gap 0, z=+14.2)
+   add z=-136.2 onto 1 plate(s)                   535    502    473    446    399    309    201     72     +535 (+54.5 kgf)    21.8 (gap 0, z=-166.2)
+   add z=-106.2 onto 2 plate(s)                   549    503    464    429    372    274    173     63     +549 (+56.0 kgf)    24.5 (gap 0, z=-106.2)
+   add z=-76.2 onto 3 plate(s)                    618    558    507    464    395    284    175     63     +618 (+63.0 kgf)    26.4 (gap 0, z=-76.2)
+   add z=-44.2 onto 4 plate(s)                    547    505    469    438    385    293    190     71     +547 (+55.8 kgf)    25.4 (gap 50, z=-76.2)
+   add z=-14.2 onto 5 plate(s)                    919    800    706    632    522    363    218     75     +919 (+93.7 kgf)    26.0 (gap 0, z=-14.2)
+   join halves (6 + 6 plates)                    1752   1493   1297   1145    926    631    387    149    +1752 (+178.6 kgf)    25.2 (gap 0, z=+166.2)
+
+worst single-block axial force anywhere in assembly: 35.0 N (3.57 kgf) -- A: add z=+14.2 onto 6 plate(s), gap 0 mm, block in plate z=+14.2
+worst single-block axial force in the finished magnet: 25.2 N  (block weight 0.30 N)
+
+signed per-block axial force, order A, built from the -z end (new plates arrive from +z), over every step and gap (N):
+  plate z  blocks | max back (-z)  blocks ever back | max fwd (+z)  blocks ever fwd | finished magnet: back / fwd, blocks back
+   -166.2    116 |         25.2               112 |         2.5                6 |  25.2 /   1.9, 110 of 116
+   -136.2     87 |         11.2                52 |        17.6               83 |  11.2 /   8.7,  50 of 87
+   -106.2     64 |          5.3                42 |        24.5               56 |   5.3 /   4.7,  40 of 64
+    -76.2     68 |          5.6                25 |        26.4               66 |   5.6 /   7.0,  27 of 68
+    -44.2     79 |         16.2                75 |        20.3               75 |  16.2 /  10.6,  73 of 79
+    -14.2     71 |         25.0                71 |        26.0               71 |  25.0 /   0.0,  71 of 71
+    +14.2     71 |         -0.0                 0 |        35.0               71 |   0.0 /  25.0,   0 of 71
+    +44.2     79 |         10.6                 6 |        28.3               79 |  10.6 /  16.2,   6 of 79
+    +76.2     68 |          7.0                39 |        20.8               68 |   7.0 /   5.6,  41 of 68
+   +106.2     64 |          6.1                18 |        26.3               64 |   4.7 /   5.3,  24 of 64
+   +136.2     87 |          9.8                45 |        26.4               85 |   8.7 /  11.2,  37 of 87
+   +166.2    116 |          1.9                 6 |        25.2              114 |   1.9 /  25.2,   6 of 116
+  blocks that at some point are pushed back (>0.5 N toward -z): 491 of 970; forward (>0.5 N toward +z): 838 of 970
+  (building from the +z end instead is the mirror image: swap back and fwd)
+
+== all plates on long rods, closed together by the end nuts (frictionless sliding plates)
+closed magnet span 357.8 mm; rod length = E + span + 60 mm (10 mm end plates, 20 mm washer/nut/spare thread per end)
+   E mm  rod mm | end-nut force N (kgf)  per rod (6) | gaps beyond final min/max, # touching | worst block N: toward mid / toward end
+   1000   1418 |       17 (   1.8)         3 N   |     79.9 /  109.6,  0          |    0.1 /    0.2
+    800   1218 |       29 (   3.0)         5 N   |     63.6 /   87.9,  0          |    0.1 /    0.4
+    600   1018 |       52 (   5.3)         9 N   |     47.4 /   67.6,  0          |    0.3 /    0.7
+    500    918 |       72 (   7.3)        12 N   |     39.2 /   55.7,  0          |    0.6 /    1.0
+    400    818 |      103 (  10.5)        17 N   |     31.1 /   44.5,  0          |    1.0 /    1.6
+    300    718 |      153 (  15.6)        26 N   |     23.5 /   33.0,  0          |    1.8 /    2.5
+    250    668 |      190 (  19.4)        32 N   |     19.3 /   27.5,  0          |    2.4 /    3.2
+    200    618 |      239 (  24.4)        40 N   |     15.4 /   21.6,  0          |    3.3 /    4.2
+    150    568 |      310 (  31.6)        52 N   |     11.0 /   17.2,  0          |    4.7 /    5.9
+    100    518 |      413 (  42.1)        69 N   |      6.6 /   13.4,  0          |    6.4 /    9.0
+     70    488 |      500 (  50.9)        83 N   |      4.1 /   11.0,  0          |    7.6 /   12.6
+     50    468 |      574 (  58.5)        96 N   |      2.3 /    9.4,  0          |    8.2 /   16.3
+     30    448 |      666 (  67.9)       111 N   |      0.6 /    7.9,  0          |    8.3 /   22.4
+     20    438 |      732 (  74.6)       122 N   |      0.0 /    6.9,  4          |    8.4 /   25.0
+     10    428 |      883 (  90.0)       147 N   |      0.0 /    5.2,  8          |    8.7 /   25.2
+      5    423 |     1069 ( 109.0)       178 N   |      0.0 /    3.6,  8          |    9.8 /   25.2
+      2    420 |     1297 ( 132.2)       216 N   |      0.0 /    2.0, 10          |   10.6 /   25.2
+      0    418 |     1752 ( 178.6)       292 N   |      0.0 /    0.0, 11          |   10.6 /   25.2
+  end force <=  20 N ( 2.0 kgf) from E = 1000 mm: rod >= 1418 mm
+  end force <=  50 N ( 5.1 kgf) from E = 800 mm: rod >= 1218 mm
+  end force <= 100 N (10.2 kgf) from E = 500 mm: rod >= 918 mm

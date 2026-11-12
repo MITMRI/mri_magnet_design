@@ -1,7 +1,7 @@
 """Exact minimum gap between every pair of blocks in a design ledger (rotated 12.7 x 12.7 squares in the ring
 plane, 25.4 mm along z). Prints the smallest gap within a ring, between rings of one slice, and between slices.
 
-    python check_gaps.py results/12cm/final/<design>.xlsx
+    python utilities/check_gaps.py results/12cm/final/<design>.xlsx
 """
 import sys
 import numpy as np

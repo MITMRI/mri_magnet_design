@@ -56,10 +56,27 @@ smallest allowed rings add ripple the linear model misses.
 
 ## 3D views
 
-`python plot_design_3d.py designs/12cm_bore200_84mT/placements.csv`. Red = north side of each block.
+`python utilities/plot_design_3d.py designs/12cm_bore200_84mT/placements.csv`. Red = north side of each block.
 
 | Isometric | Cutaway (y > 0 half) |
 |---|---|
 | ![iso](magnets_iso.png) | ![cutaway](magnets_cutaway.png) |
 | **End (along the bore)** | **Side** |
 | ![end](magnets_end.png) | ![side](magnets_side.png) |
+
+## As-built tolerance
+
+`python utilities/tolerance_12cm.py designs/12cm_bore200_84mT/placements.csv [--pos-tol 0.1]`, 2000 random builds
+per case, ppm over the 120 mm sphere surface (ideal 48.5). Full tables: `tolerance.txt` (+-0.05 mm),
+`tolerance_pos0.1.txt` (+-0.1 mm).
+
+| Errors (uniform within) | median ppm | p90 ppm |
+|---|---|---|
+| position +-0.05 mm | 251 | 329 |
+| position +-0.1 mm | 482 | 637 |
+| magnetization angle +-1 deg (with +-0.05 mm) | 1555 | 2099 |
+| Br +-0.5% (with +-0.05 mm) | 564 | 766 |
+| all: 0.05 mm, 1 deg, 0.5% | 1625 | 2192 |
+| all: 0.05 mm, 3 deg, 1.5% | 4822 | 6525 |
+
+Magnetization-angle error dominates; shimming is needed either way.

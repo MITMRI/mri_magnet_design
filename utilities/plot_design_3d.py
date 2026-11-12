@@ -2,7 +2,7 @@
 3D views of a magnet design, drawn the way MRI4ALL's magsimulator.plot_magnets3D does it (a magpylib Collection of
 Cuboids shown with magpy.show), but with the real 12.7 x 12.7 x 25.4 mm blocks instead of cubes, saved as PNGs.
 
-    python plot_design_3d.py designs/12cm_bore200/placements.csv
+    python utilities/plot_design_3d.py designs/12cm_bore200/placements.csv
 """
 import sys
 
